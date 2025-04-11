@@ -14,7 +14,7 @@ type BudgetGateway interface {
 	Update(ctx context.Context, budget models.Budget) error
 	Delete(ctx context.Context, id string) error
 	Get(ctx context.Context, id string) (models.Budget, error)
-	List(ctx context.Context, page models.PageRequest) ([]models.Budget, int64, error)
+	List(ctx context.Context, status string, description string, page models.PageRequest) ([]models.Budget, int64, error)
 	ListByMonth(ctx context.Context, month time.Month, year int) ([]models.Budget, error)
 	GetSummary(ctx context.Context, month time.Month, year int) (models.BudgetSummary, error)
 }
@@ -63,8 +63,8 @@ func (g *budgetGateway) Get(ctx context.Context, id string) (models.Budget, erro
 	return g.toModel(entity), nil
 }
 
-func (g *budgetGateway) List(ctx context.Context, page models.PageRequest) ([]models.Budget, int64, error) {
-	entities, count, err := g.repo.List(ctx, page)
+func (g *budgetGateway) List(ctx context.Context, status string, description string, page models.PageRequest) ([]models.Budget, int64, error) {
+	entities, count, err := g.repo.List(ctx, status, description, page)
 	if err != nil {
 		return nil, 0, err
 	}

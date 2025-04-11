@@ -84,12 +84,15 @@ func (c *BudgetController) List(ctx *gin.Context) {
 	if(err != nil) {
 		page = 1
 	}
+
+	status := ctx.Query("status")
+	description := ctx.Query("description")
 	
 	pageRequest := models.PageRequest{
 		Limit: int64(limit),
 		Page:  int64(page),
 	}
-	response, err := c.useCase.List(ctx, pageRequest)
+	response, err := c.useCase.List(ctx, status, description, pageRequest)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

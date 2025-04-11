@@ -23,7 +23,7 @@ type BudgetUseCase interface {
 	Update(ctx context.Context, id string, input *dtos.UpdateBudgetRequest) (*dtos.BudgetResponse, error)
 	Delete(ctx context.Context, id string) error
 	Get(ctx context.Context, id string) (*dtos.BudgetResponse, error)
-	List(ctx context.Context, page models.PageRequest) (*models.Page[*dtos.BudgetResponse], error)
+	List(ctx context.Context, status string, description string, page models.PageRequest) (*models.Page[*dtos.BudgetResponse], error)
 	ListByMonth(ctx context.Context, month time.Month, year int) ([]*dtos.BudgetResponse, error)
 	GetSummary(ctx context.Context, month time.Month, year int) (*dtos.BudgetSummaryResponse, error)
 }

@@ -39,13 +39,28 @@ func (r *repository) Get(ctx context.Context, id string) (*entities.Budget, erro
 	return &budget, nil
 }
 
-func (r *repository) List(ctx context.Context, page models.PageRequest) (budgets []entities.Budget, count int64, err error) {
-	if err = r.db.WithContext(ctx).Offset(page.Offset()).Limit(int(page.Limit)).Find(&budgets).Error; err != nil {
+func (r *repository) List(ctx context.Context, status string, description string, page models.PageRequest) (budgets []entities.Budget, count int64, err error) {
+	query := r.db.WithContext(ctx)
+
+	if description != "" {
+		query = query.Where("description LIKE ?", "%"+description+"%")
+	}
+
+	switch status {
+	case "active":
+		query = query.Where("end_date is null or end_date >= CURRENT_DATE")
+	case "expired":
+		query = query.Where("end_date is not null and end_date < CURRENT_DATE")
+	default:
+	}
+	if err = query.Offset(page.Offset()).Limit(int(page.Limit)).Find(&budgets).Error; err != nil {
 		return nil, 0, fmt.Errorf("erro ao listar orçamentos: %v", err)
 	}
-	if err := r.db.WithContext(ctx).Model(&budgets).Count(&count).Error; err != nil {
+
+	if err := query.Model(&entities.Budget{}).Count(&count).Error; err != nil {
 		return nil, 0, fmt.Errorf("erro ao contar orçamentos: %v", err)
 	}
+
 	return budgets, count, nil
 }
 
