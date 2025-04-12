@@ -8,6 +8,7 @@ type IncomeResponse struct {
 	Description string    `json:"description"`
 	Amount      float64   `json:"amount"`
 	Type        string    `json:"type"`
+	DueDay		*int 	  `json:"due_day"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }

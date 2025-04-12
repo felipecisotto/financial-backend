@@ -1,10 +1,10 @@
 package models
 
 type Page[T any] struct {
-	Page       int64 `json:page`
-	Limit      int64 `json:limit`
-	TotalPages int64 `json:total_pages`
-	Results    []T   `json:results`
+	Page       int64 `json:"page"`
+	Limit      int64 `json:"limit"`
+	TotalPages int64 `json:"total_pages"`
+	Results    []T   `json:"results"`
 }
 
 type PageRequest struct {

@@ -14,7 +14,7 @@ type UseCase interface {
 	Update(ctx context.Context, id string, dto *dtos.UpdateIncomeRequest) (*dtos.IncomeResponse, error)
 	Delete(ctx context.Context, id string) error
 	Get(ctx context.Context, id string) (*dtos.IncomeResponse, error)
-	List(ctx context.Context) ([]*dtos.IncomeResponse, error)
+	List(ctx context.Context) (*models.Page[*dtos.IncomeResponse], error)
 	ListByType(ctx context.Context, incomeType string) ([]*dtos.IncomeResponse, error)
 }
 
@@ -78,7 +78,7 @@ func (uc *useCase) Get(ctx context.Context, id string) (*dtos.IncomeResponse, er
 	return uc.toResponse(income), nil
 }
 
-func (uc *useCase) List(ctx context.Context) ([]*dtos.IncomeResponse, error) {
+func (uc *useCase) List(ctx context.Context) (*models.Page[*dtos.IncomeResponse], error) {
 	incomes, err := uc.gateway.List(ctx)
 	if err != nil {
 		return nil, err
@@ -88,7 +88,12 @@ func (uc *useCase) List(ctx context.Context) ([]*dtos.IncomeResponse, error) {
 	for i, income := range incomes {
 		responses[i] = uc.toResponse(income)
 	}
-	return responses, nil
+	return &models.Page[*dtos.IncomeResponse]{
+		Results:    responses,
+		TotalPages: 1,
+		Page:       1,
+		Limit:      10,
+	}, nil
 }
 
 func (uc *useCase) ListByType(ctx context.Context, incomeType string) ([]*dtos.IncomeResponse, error) {
@@ -104,13 +109,13 @@ func (uc *useCase) ListByType(ctx context.Context, incomeType string) ([]*dtos.I
 	return responses, nil
 }
 
-
 func (uc *useCase) toResponse(income models.Income) *dtos.IncomeResponse {
 	response := &dtos.IncomeResponse{
 		ID:          income.ID(),
 		Description: income.Description(),
 		Amount:      income.Amount(),
 		Type:        string(income.Type()),
+		DueDay:      income.DueDay(),
 		CreatedAt:   income.CreatedAt(),
 		UpdatedAt:   income.UpdatedAt(),
 	}

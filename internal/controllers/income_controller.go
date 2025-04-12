@@ -72,22 +72,13 @@ func (c *IncomeController) Get(ctx *gin.Context) {
 }
 
 func (c *IncomeController) List(ctx *gin.Context) {
-	responses, err := c.UseCase.List(ctx)
+	response, err := c.UseCase.List(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Convert []*IncomeResponse to []IncomeResponse
-	incomes := make([]dtos.IncomeResponse, len(responses))
-	for i, r := range responses {
-		incomes[i] = *r
-	}
-
-	ctx.JSON(http.StatusOK, dtos.ListIncomesResponse{
-		Incomes: incomes,
-		Total:   int64(len(responses)),
-	})
+	ctx.JSON(http.StatusOK, response)
 }
 
 func (c *IncomeController) ListByType(ctx *gin.Context) {

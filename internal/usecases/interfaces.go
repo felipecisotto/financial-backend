@@ -33,6 +33,6 @@ type IncomeUseCase interface {
 	Update(ctx context.Context, id string, input *dtos.UpdateIncomeRequest) (*dtos.IncomeResponse, error)
 	Delete(ctx context.Context, id string) error
 	Get(ctx context.Context, id string) (*dtos.IncomeResponse, error)
-	List(ctx context.Context) ([]*dtos.IncomeResponse, error)
+	List(ctx context.Context) (*models.Page[*dtos.IncomeResponse], error)
 	ListByType(ctx context.Context, incomeType string) ([]*dtos.IncomeResponse, error)
 }
