@@ -8,7 +8,6 @@ import (
 	"financial-backend/internal/dtos"
 	"financial-backend/internal/gateways"
 	"financial-backend/internal/models"
-	"financial-backend/internal/usecases"
 
 	"github.com/google/uuid"
 )
@@ -19,7 +18,17 @@ type useCase struct {
 	defaultDueDate int
 }
 
-func NewUseCase(expenseGateway gateways.ExpenseGateway, budgetGateway gateways.BudgetGateway, defaultDueDate int) usecases.ExpenseUseCase {
+type UseCase interface {
+	Create(ctx context.Context, input *dtos.CreateExpenseRequest) (*dtos.ExpenseResponse, error)
+	Delete(ctx context.Context, id string) error
+	FindByID(ctx context.Context, id string) (*dtos.ExpenseResponse, error)
+	List(ctx context.Context, input *dtos.ListExpensesRequest) (*dtos.ListExpensesResponse, error)
+	ListByMonth(ctx context.Context, input *dtos.ListExpensesByMonthRequest) (*dtos.ListExpensesResponse, error)
+	AssignToBudget(ctx context.Context, expenseID string, budgetID string) error
+	RemoveFromBudget(ctx context.Context, expenseID string, budgetID string) error
+}
+
+func NewUseCase(expenseGateway gateways.ExpenseGateway, budgetGateway gateways.BudgetGateway, defaultDueDate int) UseCase {
 	return &useCase{
 		expenseGateway: expenseGateway,
 		budgetGateway:  budgetGateway,
@@ -128,8 +137,7 @@ func (uc *useCase) toExpenseResponse(expense models.Expense) *dtos.ExpenseRespon
 		Description: expense.Description(),
 		Amount:      expense.Amount(),
 		Type:        string(expense.Type()),
-		StartDate:   &startDate, 
+		StartDate:   &startDate,
 		DueDate:     &dueDate,
 	}
 }
-

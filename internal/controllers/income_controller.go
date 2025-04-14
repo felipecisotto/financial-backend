@@ -4,16 +4,16 @@ import (
 	"net/http"
 
 	"financial-backend/internal/dtos"
-	"financial-backend/internal/usecases"
+	"financial-backend/internal/usecases/income"
 
 	"github.com/gin-gonic/gin"
 )
 
 type IncomeController struct {
-	UseCase usecases.IncomeUseCase
+	UseCase income.UseCase
 }
 
-func NewIncomeController(useCase usecases.IncomeUseCase) *IncomeController {
+func NewIncomeController(useCase income.UseCase) *IncomeController {
 	return &IncomeController{UseCase: useCase}
 }
 
@@ -72,33 +72,21 @@ func (c *IncomeController) Get(ctx *gin.Context) {
 }
 
 func (c *IncomeController) List(ctx *gin.Context) {
-	response, err := c.UseCase.List(ctx)
+	var params dtos.ListIncomeParams
+
+	if err := ctx.ShouldBindQuery(&params); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "parâmetros inválidos"})
+		return
+	}
+
+	response, err := c.UseCase.List(ctx, params)
+
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	ctx.JSON(http.StatusOK, response)
-}
-
-func (c *IncomeController) ListByType(ctx *gin.Context) {
-	incomeType := ctx.Param("type")
-	responses, err := c.UseCase.ListByType(ctx, incomeType)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	// Convert []*IncomeResponse to []IncomeResponse
-	incomes := make([]dtos.IncomeResponse, len(responses))
-	for i, r := range responses {
-		incomes[i] = *r
-	}
-
-	ctx.JSON(http.StatusOK, dtos.ListIncomesResponse{
-		Incomes: incomes,
-		Total:   int64(len(responses)),
-	})
 }
 
 func (c *IncomeController) RegisterRoutes(router *gin.RouterGroup) {
@@ -109,6 +97,5 @@ func (c *IncomeController) RegisterRoutes(router *gin.RouterGroup) {
 		incomes.DELETE("/:id", c.Delete)
 		incomes.GET("/:id", c.Get)
 		incomes.GET("", c.List)
-		incomes.GET("/type/:type", c.ListByType)
 	}
 }

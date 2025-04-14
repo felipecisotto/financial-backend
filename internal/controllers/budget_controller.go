@@ -7,16 +7,16 @@ import (
 
 	"financial-backend/internal/dtos"
 	"financial-backend/internal/models"
-	"financial-backend/internal/usecases"
+	"financial-backend/internal/usecases/budget"
 
 	"github.com/gin-gonic/gin"
 )
 
 type BudgetController struct {
-	useCase usecases.BudgetUseCase
+	useCase budget.UseCase
 }
 
-func NewBudgetController(useCase usecases.BudgetUseCase) *BudgetController {
+func NewBudgetController(useCase budget.UseCase) *BudgetController {
 	return &BudgetController{useCase: useCase}
 }
 
@@ -76,18 +76,18 @@ func (c *BudgetController) Get(ctx *gin.Context) {
 
 func (c *BudgetController) List(ctx *gin.Context) {
 	limit, err := strconv.Atoi(ctx.Query("limit"))
-	if(err != nil) {
+	if err != nil {
 		limit = 50
 	}
 	page, err := strconv.Atoi(ctx.Query("page"))
 
-	if(err != nil) {
+	if err != nil {
 		page = 1
 	}
 
 	status := ctx.Query("status")
 	description := ctx.Query("description")
-	
+
 	pageRequest := models.PageRequest{
 		Limit: int64(limit),
 		Page:  int64(page),

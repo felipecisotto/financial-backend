@@ -3,7 +3,6 @@ package income
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"financial-backend/internal/entities"
 
@@ -27,7 +26,7 @@ func (r *repository) Update(ctx context.Context, income *entities.Income) error 
 }
 
 func (r *repository) Delete(ctx context.Context, id string) error {
-	return r.db.WithContext(ctx).Delete(&entities.Income{}, id).Error
+	return r.db.WithContext(ctx).Where("id = ?", id).Delete(&entities.Income{}).Error
 }
 
 func (r *repository) Get(ctx context.Context, id string) (*entities.Income, error) {
@@ -38,34 +37,26 @@ func (r *repository) Get(ctx context.Context, id string) (*entities.Income, erro
 	return &income, nil
 }
 
-func (r *repository) List(ctx context.Context) ([]*entities.Income, error) {
+func (r *repository) List(ctx context.Context, incomeType, description string, limit, offset int) ([]*entities.Income, int64, error) {
 	var incomes []*entities.Income
-	if err := r.db.WithContext(ctx).Find(&incomes).Error; err != nil {
-		return nil, fmt.Errorf("erro ao listar receitas: %v", err)
-	}
-	return incomes, nil
-}
+	var count int64
 
-func (r *repository) ListByType(ctx context.Context, incomeType entities.IncomeType) ([]*entities.Income, error) {
-	var incomes []*entities.Income
-	if err := r.db.WithContext(ctx).
-		Where("type = ?", incomeType).
-		Find(&incomes).Error; err != nil {
-		return nil, fmt.Errorf("erro ao listar receitas: %v", err)
-	}
-	return incomes, nil
-}
+	query := r.db.WithContext(ctx)
 
-func (r *repository) ListByMonth(ctx context.Context, month time.Month, year int) ([]*entities.Income, error) {
-	startDate := time.Date(year, month, 1, 0, 0, 0, 0, time.UTC)
-	endDate := startDate.AddDate(0, 1, 0).Add(-time.Second)
-
-	var incomes []*entities.Income
-	if err := r.db.WithContext(ctx).
-		Where("date BETWEEN ? AND ?", startDate, endDate).
-		Find(&incomes).Error; err != nil {
-		return nil, fmt.Errorf("erro ao listar receitas: %v", err)
+	if description != "" {
+		query = query.Where("description LIKE ?", "%"+description+"%")
 	}
 
-	return incomes, nil
+	if incomeType != "" {
+		query = query.Where("type = ?", incomeType)
+	}
+
+	if err := query.Offset(offset).Limit(limit).Find(&incomes).Error; err != nil {
+		return nil, 0, fmt.Errorf("erro ao listar receitas: %v", err)
+	}
+
+	if err := query.Model(&entities.Income{}).Count(&count).Error; err != nil {
+		return nil, 0, fmt.Errorf("erro ao contar receitas: %v", err)
+	}
+	return incomes, count, nil
 }

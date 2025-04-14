@@ -1,6 +1,7 @@
 package models
 
 import (
+	"strings"
 	"time"
 )
 
@@ -37,7 +38,7 @@ func NewBudget(id string, amount float64, description string, endDate *time.Time
 	return &budget{
 		id:          id,
 		amount:      amount,
-		description: description,
+		description: strings.ToUpper(description),
 		endDate:     endDate,
 		createdAt:   now,
 		updatedAt:   now,

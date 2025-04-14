@@ -5,16 +5,16 @@ import (
 	"time"
 
 	"financial-backend/internal/dtos"
-	"financial-backend/internal/usecases"
+	"financial-backend/internal/usecases/expense"
 
 	"github.com/gin-gonic/gin"
 )
 
 type ExpenseController struct {
-	UseCase usecases.ExpenseUseCase
+	UseCase expense.UseCase
 }
 
-func NewExpenseController(useCase usecases.ExpenseUseCase) *ExpenseController {
+func NewExpenseController(useCase expense.UseCase) *ExpenseController {
 	return &ExpenseController{
 		UseCase: useCase,
 	}

@@ -2,7 +2,6 @@ package gateways
 
 import (
 	"context"
-	"time"
 
 	"financial-backend/internal/entities"
 	"financial-backend/internal/models"
@@ -14,9 +13,7 @@ type IncomeGateway interface {
 	Update(ctx context.Context, income models.Income) error
 	Delete(ctx context.Context, id string) error
 	Get(ctx context.Context, id string) (models.Income, error)
-	List(ctx context.Context) ([]models.Income, error)
-	ListByType(ctx context.Context, incomeType models.IncomeType) ([]models.Income, error)
-	ListByMonth(ctx context.Context, month time.Month, year int) ([]models.Income, error)
+	List(ctx context.Context, incomeType, description string, page models.PageRequest) ([]models.Income, int64, error)
 }
 
 type incomeGateway struct {
@@ -32,8 +29,10 @@ func (g *incomeGateway) Create(ctx context.Context, income models.Income) error 
 		ID:          income.ID(),
 		Description: income.Description(),
 		Amount:      income.Amount(),
-		Type:        entities.IncomeType(income.Type()),
+		Type:        string(income.Type()),
 		DueDay:      income.DueDay(),
+		StartDate:   income.StartDate(),
+		EndDate:     income.EndDate(),
 		CreatedAt:   income.CreatedAt(),
 		UpdatedAt:   income.UpdatedAt(),
 	}
@@ -45,8 +44,10 @@ func (g *incomeGateway) Update(ctx context.Context, income models.Income) error 
 		ID:          income.ID(),
 		Description: income.Description(),
 		Amount:      income.Amount(),
-		Type:        entities.IncomeType(income.Type()),
+		Type:        string(income.Type()),
 		DueDay:      income.DueDay(),
+		StartDate:   income.StartDate(),
+		EndDate:     income.EndDate(),
 		CreatedAt:   income.CreatedAt(),
 		UpdatedAt:   income.UpdatedAt(),
 	}
@@ -65,51 +66,28 @@ func (g *incomeGateway) Get(ctx context.Context, id string) (models.Income, erro
 	return g.toModel(entity), nil
 }
 
-func (g *incomeGateway) List(ctx context.Context) ([]models.Income, error) {
-	entities, err := g.repo.List(ctx)
+func (g *incomeGateway) List(ctx context.Context, incomeType, description string, page models.PageRequest) ([]models.Income, int64, error) {
+	entities, count, err := g.repo.List(ctx, description, incomeType, int(page.Limit), page.Offset())
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	incomes := make([]models.Income, len(entities))
 	for i, entity := range entities {
 		incomes[i] = g.toModel(entity)
 	}
-	return incomes, nil
-}
-
-func (g *incomeGateway) ListByType(ctx context.Context, incomeType models.IncomeType) ([]models.Income, error) {
-	entities, err := g.repo.ListByType(ctx, entities.IncomeType(incomeType))
-	if err != nil {
-		return nil, err
-	}
-
-	incomes := make([]models.Income, len(entities))
-	for i, entity := range entities {
-		incomes[i] = g.toModel(entity)
-	}
-	return incomes, nil
-}
-
-func (g *incomeGateway) ListByMonth(ctx context.Context, month time.Month, year int) ([]models.Income, error) {
-	entities, err := g.repo.ListByMonth(ctx, month, year)
-	if err != nil {
-		return nil, err
-	}
-
-	incomes := make([]models.Income, len(entities))
-	for i, entity := range entities {
-		incomes[i] = g.toModel(entity)
-	}
-	return incomes, nil
+	return incomes, count, nil
 }
 
 func (g *incomeGateway) toModel(entity *entities.Income) models.Income {
-	return models.NewIncome(
+	income, _ := models.NewIncome(
 		entity.ID,
 		entity.Description,
 		entity.Amount,
 		models.IncomeType(entity.Type),
 		entity.DueDay,
+		entity.StartDate,
+		entity.EndDate,
 	)
+	return income
 }

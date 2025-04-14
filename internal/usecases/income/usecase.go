@@ -5,6 +5,8 @@ import (
 	"financial-backend/internal/dtos"
 	"financial-backend/internal/gateways"
 	"financial-backend/internal/models"
+	"fmt"
+	"math"
 
 	"github.com/google/uuid"
 )
@@ -14,8 +16,7 @@ type UseCase interface {
 	Update(ctx context.Context, id string, dto *dtos.UpdateIncomeRequest) (*dtos.IncomeResponse, error)
 	Delete(ctx context.Context, id string) error
 	Get(ctx context.Context, id string) (*dtos.IncomeResponse, error)
-	List(ctx context.Context) (*models.Page[*dtos.IncomeResponse], error)
-	ListByType(ctx context.Context, incomeType string) ([]*dtos.IncomeResponse, error)
+	List(ctx context.Context, params dtos.ListIncomeParams) (*models.Page[*dtos.IncomeResponse], error)
 }
 
 type useCase struct {
@@ -27,13 +28,19 @@ func NewUseCase(gateway gateways.IncomeGateway) UseCase {
 }
 
 func (uc *useCase) Create(ctx context.Context, dto *dtos.CreateIncomeRequest) (*dtos.IncomeResponse, error) {
-	income := models.NewIncome(
+	income, err := models.NewIncome(
 		uuid.New().String(),
 		dto.Description,
 		dto.Amount,
 		models.IncomeType(dto.Type),
-		&dto.DueDay,
+		dto.DueDay,
+		dto.StartDate,
+		dto.EndDate,
 	)
+
+	if err != nil {
+		return nil, err
+	}
 
 	if err := uc.gateway.Create(ctx, income); err != nil {
 		return nil, err
@@ -78,8 +85,12 @@ func (uc *useCase) Get(ctx context.Context, id string) (*dtos.IncomeResponse, er
 	return uc.toResponse(income), nil
 }
 
-func (uc *useCase) List(ctx context.Context) (*models.Page[*dtos.IncomeResponse], error) {
-	incomes, err := uc.gateway.List(ctx)
+func (uc *useCase) List(ctx context.Context, params dtos.ListIncomeParams) (*models.Page[*dtos.IncomeResponse], error) {
+	fmt.Printf("params %v", params)
+	incomes, count, err := uc.gateway.List(ctx, params.Description, params.Type, models.PageRequest{
+		Limit: params.Limit,
+		Page:  params.Page,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -88,37 +99,29 @@ func (uc *useCase) List(ctx context.Context) (*models.Page[*dtos.IncomeResponse]
 	for i, income := range incomes {
 		responses[i] = uc.toResponse(income)
 	}
+
 	return &models.Page[*dtos.IncomeResponse]{
 		Results:    responses,
-		TotalPages: 1,
-		Page:       1,
-		Limit:      10,
+		TotalPages: int64(math.Ceil(float64(count) / float64(params.Limit))),
+		Page:       params.Page,
+		Limit:      params.Limit,
 	}, nil
 }
 
-func (uc *useCase) ListByType(ctx context.Context, incomeType string) ([]*dtos.IncomeResponse, error) {
-	incomes, err := uc.gateway.ListByType(ctx, models.IncomeType(incomeType))
-	if err != nil {
-		return nil, err
-	}
-
-	responses := make([]*dtos.IncomeResponse, len(incomes))
-	for i, income := range incomes {
-		responses[i] = uc.toResponse(income)
-	}
-	return responses, nil
-}
-
 func (uc *useCase) toResponse(income models.Income) *dtos.IncomeResponse {
-	response := &dtos.IncomeResponse{
+	if income == nil {
+		return nil
+	}
+
+	return &dtos.IncomeResponse{
 		ID:          income.ID(),
 		Description: income.Description(),
 		Amount:      income.Amount(),
 		Type:        string(income.Type()),
 		DueDay:      income.DueDay(),
+		StartDate:   income.StartDate(),
+		EndDate:     income.EndDate(),
 		CreatedAt:   income.CreatedAt(),
 		UpdatedAt:   income.UpdatedAt(),
 	}
-
-	return response
 }
