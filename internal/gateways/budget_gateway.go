@@ -15,8 +15,6 @@ type BudgetGateway interface {
 	Delete(ctx context.Context, id string) error
 	Get(ctx context.Context, id string) (models.Budget, error)
 	List(ctx context.Context, status string, description string, page models.PageRequest) ([]models.Budget, int64, error)
-	ListByMonth(ctx context.Context, month time.Month, year int) ([]models.Budget, error)
-	GetSummary(ctx context.Context, month time.Month, year int) (models.BudgetSummary, error)
 }
 
 type budgetGateway struct {
@@ -74,38 +72,6 @@ func (g *budgetGateway) List(ctx context.Context, status string, description str
 		budgets[i] = g.toModel(&entity)
 	}
 	return budgets, count, nil
-}
-
-func (g *budgetGateway) ListByMonth(ctx context.Context, month time.Month, year int) ([]models.Budget, error) {
-	entities, err := g.repo.ListByMonth(ctx, month, year)
-	if err != nil {
-		return nil, err
-	}
-
-	budgets := make([]models.Budget, len(entities))
-	for i, entity := range entities {
-		budgets[i] = g.toModel(entity)
-	}
-	return budgets, nil
-}
-
-func (g *budgetGateway) GetSummary(ctx context.Context, month time.Month, year int) (models.BudgetSummary, error) {
-	entities, err := g.repo.ListByMonth(ctx, month, year)
-	if err != nil {
-		return nil, err
-	}
-
-	var totalBudgeted float64
-	var totalSpent float64
-
-	for _, entity := range entities {
-		totalBudgeted += entity.Amount
-		for _, expense := range entity.Expenses {
-			totalSpent += expense.Amount
-		}
-	}
-
-	return models.NewBudgetSummary(totalBudgeted, totalSpent), nil
 }
 
 func (g *budgetGateway) toModel(entity *entities.Budget) models.Budget {

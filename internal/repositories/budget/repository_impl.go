@@ -3,7 +3,6 @@ package budget
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"financial-backend/internal/entities"
 	"financial-backend/internal/models"
@@ -62,49 +61,4 @@ func (r *repository) List(ctx context.Context, status string, description string
 	}
 
 	return budgets, count, nil
-}
-
-func (r *repository) ListByMonth(ctx context.Context, month time.Month, year int) ([]*entities.Budget, error) {
-	startDate := time.Date(year, month, 1, 0, 0, 0, 0, time.UTC)
-	endDate := startDate.AddDate(0, 1, 0).Add(-time.Second)
-
-	var budgets []*entities.Budget
-	if err := r.db.WithContext(ctx).
-		Where("start_date <= ? AND end_date >= ?", endDate, startDate).
-		Find(&budgets).Error; err != nil {
-		return nil, fmt.Errorf("erro ao listar orçamentos: %v", err)
-	}
-
-	return budgets, nil
-}
-
-func (r *repository) GetSummary(ctx context.Context, id string) (*entities.Budget, error) {
-	var budget entities.Budget
-	if err := r.db.WithContext(ctx).
-		Preload("Expenses").
-		First(&budget, "id = ?", id).Error; err != nil {
-		return nil, fmt.Errorf("erro ao buscar orçamento: %v", err)
-	}
-
-	return &budget, nil
-}
-
-func (r *repository) CreateBudgetExpense(ctx context.Context, budgetID string, expense *entities.Expense) error {
-	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		// Verifica se o orçamento existe
-		var budget entities.Budget
-		if err := tx.First(&budget, "id = ?", budgetID).Error; err != nil {
-			return err
-		}
-
-		// Atualiza o ID do orçamento na despesa
-		expense.BudgetID = &budgetID
-
-		// Cria a despesa
-		if err := tx.Create(expense).Error; err != nil {
-			return err
-		}
-
-		return nil
-	})
 }

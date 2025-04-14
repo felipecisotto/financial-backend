@@ -5,7 +5,7 @@ import (
 	"financial-backend/internal/dtos"
 	"financial-backend/internal/gateways"
 	"financial-backend/internal/models"
-	"time"
+	"math"
 
 	"github.com/google/uuid"
 )
@@ -15,9 +15,7 @@ type UseCase interface {
 	Update(ctx context.Context, id string, dto *dtos.UpdateBudgetRequest) (*dtos.BudgetResponse, error)
 	Delete(ctx context.Context, id string) error
 	Get(ctx context.Context, id string) (*dtos.BudgetResponse, error)
-	List(ctx context.Context, status string, description string, page models.PageRequest) (*models.Page[*dtos.BudgetResponse], error)
-	ListByMonth(ctx context.Context, month time.Month, year int) ([]*dtos.BudgetResponse, error)
-	GetSummary(ctx context.Context, month time.Month, year int) (*dtos.BudgetSummaryResponse, error)
+	List(ctx context.Context, params dtos.BudgetListParams) (*models.Page[*dtos.BudgetResponse], error)
 }
 
 type useCase struct {
@@ -70,8 +68,11 @@ func (uc *useCase) Get(ctx context.Context, id string) (*dtos.BudgetResponse, er
 	return uc.toResponse(budget), nil
 }
 
-func (uc *useCase) List(ctx context.Context, status string, description string, page models.PageRequest) (*models.Page[*dtos.BudgetResponse], error) {
-	budgets, count, err := uc.gateway.List(ctx, status, description, page)
+func (uc *useCase) List(ctx context.Context, dto dtos.BudgetListParams) (*models.Page[*dtos.BudgetResponse], error) {
+	budgets, count, err := uc.gateway.List(ctx, dto.Status, dto.Description, models.PageRequest{
+		Page:  dto.Page,
+		Limit: dto.Limit,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -81,37 +82,10 @@ func (uc *useCase) List(ctx context.Context, status string, description string, 
 		responses[i] = uc.toResponse(budget)
 	}
 	return &models.Page[*dtos.BudgetResponse]{
-		Page:       page.Page,
-		Limit:      page.Limit,
-		TotalPages: count / page.Limit,
+		Page:       dto.Page,
+		Limit:      dto.Limit,
+		TotalPages: int64(math.Ceil(float64(count) / float64(dto.Limit))),
 		Results:    responses,
-	}, nil
-}
-
-func (uc *useCase) ListByMonth(ctx context.Context, month time.Month, year int) ([]*dtos.BudgetResponse, error) {
-	budgets, err := uc.gateway.ListByMonth(ctx, month, year)
-	if err != nil {
-		return nil, err
-	}
-
-	responses := make([]*dtos.BudgetResponse, len(budgets))
-	for i, budget := range budgets {
-		responses[i] = uc.toResponse(budget)
-	}
-	return responses, nil
-}
-
-func (uc *useCase) GetSummary(ctx context.Context, month time.Month, year int) (*dtos.BudgetSummaryResponse, error) {
-	summary, err := uc.gateway.GetSummary(ctx, month, year)
-	if err != nil {
-		return nil, err
-	}
-
-	return &dtos.BudgetSummaryResponse{
-		TotalBudgeted:   summary.TotalBudgeted(),
-		TotalSpent:      summary.TotalSpent(),
-		Remaining:       summary.Remaining(),
-		PercentageSpent: summary.PercentageSpent(),
 	}, nil
 }
 

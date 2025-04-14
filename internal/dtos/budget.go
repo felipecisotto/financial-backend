@@ -25,10 +25,8 @@ type BudgetResponse struct {
 	UpdatedAt   time.Time  `json:"updated_at"`
 }
 
-// BudgetSummaryResponse representa o resumo do orçamento
-type BudgetSummaryResponse struct {
-	TotalBudgeted   float64 `json:"total_budgeted"`
-	TotalSpent      float64 `json:"total_spent"`
-	Remaining       float64 `json:"remaining"`
-	PercentageSpent float64 `json:"percentage_spent"`
+type BudgetListParams struct {
+	Description string `form:"description"`
+	Status      string `form:"status"`
+	PageRequest
 }
