@@ -4,36 +4,30 @@ import (
 	"time"
 )
 
-// CreateExpenseRequest representa os dados necessários para criar uma despesa
-type CreateExpenseRequest struct {
+// ExpenseDTO representa os dados necessários para criar uma despesa
+type ExpenseDTO struct {
 	Description  string     `json:"description" binding:"required"`
 	Amount       float64    `json:"amount" binding:"required"`
 	Type         string     `json:"type" binding:"required"`
 	BudgetID     *string    `json:"budget_id"`
-	DueDate 	 *time.Time  `json:"due_date"`
+	Recurrency   *string    `json:"recurrency"`
+	Method       string     `json:"method" binding:"required"`
 	Installments *int       `json:"installments"`
+	DueDay       int        `json:"due_day" binding:"required"`
+	StartDate    time.Time  `json:"start_date" binding:"required"`
+	EndDate      *time.Time `json:"end_date"`
 }
 
 // ExpenseResponse representa os dados retornados de uma despesa
 type ExpenseResponse struct {
-	ID           string     `json:"id"`
-	Description  string     `json:"description"`
-	Amount       float64    `json:"amount"`
-	Type         string     `json:"type"`
-	BudgetID     *string    `json:"budget_id"`
-	StartDate    *time.Time `json:"start_date"`
-	DueDate      *time.Time `json:"end_date"`
+	ID string `json:"id"`
+	ExpenseDTO
 }
 
 // ListExpensesResponse representa a resposta da listagem de despesas
 type ListExpensesResponse struct {
 	Expenses []ExpenseResponse `json:"expenses"`
 	Total    int64             `json:"total"`
-}
-
-// ListExpensesByMonthRequest representa os parâmetros para listar despesas por mês
-type ListExpensesByMonthRequest struct {
-	Month time.Time `json:"month" binding:"required"`
 }
 
 // UpdateExpenseRequest representa os dados necessários para atualizar uma despesa

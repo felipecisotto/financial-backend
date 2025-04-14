@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"net/http"
-	"time"
 
 	"financial-backend/internal/dtos"
 	"financial-backend/internal/usecases/expense"
@@ -21,7 +20,7 @@ func NewExpenseController(useCase expense.UseCase) *ExpenseController {
 }
 
 func (c *ExpenseController) Create(ctx *gin.Context) {
-	var input dtos.CreateExpenseRequest
+	var input dtos.ExpenseDTO
 	if err := ctx.ShouldBindJSON(&input); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -73,49 +72,6 @@ func (c *ExpenseController) List(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response)
 }
 
-func (c *ExpenseController) ListByMonth(ctx *gin.Context) {
-	var request struct {
-		Month time.Time `form:"month" binding:"required"`
-	}
-
-	if err := ctx.ShouldBindQuery(&request); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	response, err := c.UseCase.ListByMonth(ctx, &dtos.ListExpensesByMonthRequest{
-		Month: request.Month,
-	})
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	ctx.JSON(http.StatusOK, response)
-}
-
-func (c *ExpenseController) AssignToBudget(ctx *gin.Context) {
-	expenseID := ctx.Param("id")
-	budgetID := ctx.Param("budgetId")
-	if err := c.UseCase.AssignToBudget(ctx, expenseID, budgetID); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	ctx.Status(http.StatusNoContent)
-}
-
-func (c *ExpenseController) RemoveFromBudget(ctx *gin.Context) {
-	expenseID := ctx.Param("id")
-	budgetID := ctx.Param("budgetId")
-	if err := c.UseCase.RemoveFromBudget(ctx, expenseID, budgetID); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	ctx.Status(http.StatusNoContent)
-}
-
 func (c *ExpenseController) RegisterRoutes(router *gin.RouterGroup) {
 	expenses := router.Group("/expenses")
 	{
@@ -123,8 +79,5 @@ func (c *ExpenseController) RegisterRoutes(router *gin.RouterGroup) {
 		expenses.DELETE("/:id", c.Delete)
 		expenses.GET("/:id", c.GetByID)
 		expenses.GET("", c.List)
-		expenses.GET("/month", c.ListByMonth)
-		expenses.POST("/:id/budget/:budgetId", c.AssignToBudget)
-		expenses.DELETE("/:id/budget/:budgetId", c.RemoveFromBudget)
 	}
 }

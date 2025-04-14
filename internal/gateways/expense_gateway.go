@@ -15,9 +15,6 @@ type ExpenseGateway interface {
 	Delete(ctx context.Context, id string) error
 	Get(ctx context.Context, id string) (models.Expense, error)
 	List(ctx context.Context) ([]models.Expense, error)
-	ListByMonth(ctx context.Context, month time.Month, year int) ([]models.Expense, error)
-	AssignToBudget(ctx context.Context, expenseID string, budgetID string) error
-	RemoveFromBudget(ctx context.Context, expenseID string, budgetID string) error
 }
 
 type expenseGateway struct {
@@ -30,14 +27,18 @@ func NewExpenseGateway(repo expense.Repository) ExpenseGateway {
 
 func (g *expenseGateway) Create(ctx context.Context, expense models.Expense) error {
 	entity := &entities.Expense{
-		ID:          expense.Id(),
-		Description: expense.Description(),
-		Amount:      expense.Amount(),
-		Type:        string(expense.Type()),
-		StartDate:   expense.StartDate(),
-		DueDate:     expense.DueDate(),
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+		ID:           expense.Id(),
+		Description:  expense.Description(),
+		Amount:       expense.Amount(),
+		Type:         string(expense.Type()),
+		Recurrency:   (*string)(expense.Recurrency()),
+		Method:       string(expense.Method()),
+		Installments: expense.Installments(),
+		StartDate:    expense.StartDate(),
+		DueDay:       expense.DueDay(),
+		EndDate:      expense.EndDate(),
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
 	}
 	return g.repo.Create(ctx, entity)
 }
@@ -78,27 +79,19 @@ func (g *expenseGateway) List(ctx context.Context) ([]models.Expense, error) {
 	return expenses, nil
 }
 
-func (g *expenseGateway) ListByMonth(ctx context.Context, month time.Month, year int) ([]models.Expense, error) {
-	entities, err := g.repo.ListByMonth(ctx, month, year)
-	if err != nil {
-		return nil, err
-	}
-
-	expenses := make([]models.Expense, len(entities))
-	for i, entity := range entities {
-		expenses[i] = g.toModel(entity)
-	}
-	return expenses, nil
-}
-
-func (g *expenseGateway) AssignToBudget(ctx context.Context, expenseID string, budgetID string) error {
-	return g.repo.AssignToBudget(ctx, expenseID, budgetID)
-}
-
-func (g *expenseGateway) RemoveFromBudget(ctx context.Context, expenseID string, budgetID string) error {
-	return g.repo.RemoveFromBudget(ctx, expenseID, budgetID)
-}
-
 func (g *expenseGateway) toModel(entity *entities.Expense) models.Expense {
-	return models.NewExpense(entity.ID, entity.Description, entity.Amount, entity.Type, entity.DueDate, entity.StartDate)
+	expense, _ := models.NewExpense(
+		entity.ID,
+		entity.Description,
+		entity.Amount,
+		entity.Type,
+		entity.BudgetID,
+		entity.Recurrency,
+		entity.Method,
+		entity.Installments,
+		entity.DueDay,
+		entity.StartDate,
+		entity.EndDate,
+	)
+	return expense
 }
