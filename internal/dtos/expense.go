@@ -44,9 +44,11 @@ type UpdateExpenseRequest struct {
 
 // ListExpensesRequest representa os parâmetros para listar despesas
 type ListExpensesRequest struct {
-	Type     *string    `json:"type"`
-	Category *string    `json:"category"`
-	BudgetID *string    `json:"budget_id"`
-	StartAt  *time.Time `json:"start_at"`
-	EndAt    *time.Time `json:"end_at"`
+	Description string `form:"description"`
+	Type        string `form:"type"`
+	Category    string `form:"category"`
+	BudgetID    string `form:"budget_id"`
+	Recurrency  string `form:"recurrency"`
+	Method      string `form:"method"`
+	PageRequest
 }

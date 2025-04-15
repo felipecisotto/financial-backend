@@ -3,6 +3,7 @@ package expense
 import (
 	"context"
 	"fmt"
+	"math"
 	"time"
 
 	"financial-backend/internal/dtos"
@@ -22,7 +23,7 @@ type UseCase interface {
 	Create(ctx context.Context, input *dtos.ExpenseDTO) (*dtos.ExpenseResponse, error)
 	Delete(ctx context.Context, id string) error
 	FindByID(ctx context.Context, id string) (*dtos.ExpenseResponse, error)
-	List(ctx context.Context, input *dtos.ListExpensesRequest) (*dtos.ListExpensesResponse, error)
+	List(ctx context.Context, input *dtos.ListExpensesRequest) (*models.Page[*dtos.ExpenseResponse], error)
 }
 
 func NewUseCase(expenseGateway gateways.ExpenseGateway, budgetGateway gateways.BudgetGateway, defaultDueDate int) UseCase {
@@ -83,20 +84,30 @@ func (uc *useCase) FindByID(ctx context.Context, id string) (*dtos.ExpenseRespon
 	return uc.toExpenseResponse(expense), nil
 }
 
-func (uc *useCase) List(ctx context.Context, request *dtos.ListExpensesRequest) (*dtos.ListExpensesResponse, error) {
-	expenses, err := uc.expenseGateway.List(ctx)
+func (uc *useCase) List(ctx context.Context, request *dtos.ListExpensesRequest) (*models.Page[*dtos.ExpenseResponse], error) {
+	expenses, count, err := uc.expenseGateway.List(
+		ctx,
+		request.Description,
+		request.Type,
+		request.Category,
+		request.BudgetID,
+		request.Recurrency,
+		request.Method,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("erro ao listar despesas: %v", err)
 	}
 
-	var response []dtos.ExpenseResponse
-	for _, expense := range expenses {
-		response = append(response, *uc.toExpenseResponse(expense))
+	responses := make([]*dtos.ExpenseResponse, len(expenses))
+	for i, expense := range expenses {
+		responses[i] = uc.toExpenseResponse(expense)
 	}
 
-	return &dtos.ListExpensesResponse{
-		Expenses: response,
-		Total:    int64(len(response)),
+	return &models.Page[*dtos.ExpenseResponse]{
+		Page:       request.Page,
+		Limit:      request.Limit,
+		TotalPages: int64(math.Ceil(float64(count) / float64(request.Limit))),
+		Results:    responses,
 	}, nil
 }
 
