@@ -40,9 +40,9 @@ func (uc *useCase) Create(ctx context.Context, input *dtos.ExpenseDTO) (*dtos.Ex
 	if input.Installments != nil && input.EndDate == nil {
 		newEndDateValue := time.Date(time.Now().Year(), time.Now().Month()+time.Month(*input.Installments), uc.defaultDueDate, 0, 0, 0, 0, time.UTC)
 		newEndDate = &newEndDateValue // Take the address of the new time.Time value
+	} else {
+		newEndDate = input.EndDate
 	}
-
-	newEndDate = input.EndDate
 
 	expense, err := models.NewExpense(
 		uuid.New().String(),
