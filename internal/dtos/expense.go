@@ -6,16 +6,17 @@ import (
 
 // ExpenseDTO representa os dados necessários para criar uma despesa
 type ExpenseDTO struct {
-	Description  string     `json:"description" binding:"required"`
-	Amount       float64    `json:"amount" binding:"required"`
-	Type         string     `json:"type" binding:"required"`
-	BudgetID     *string    `json:"budget_id"`
-	Recurrency   *string    `json:"recurrency"`
-	Method       string     `json:"method" binding:"required"`
-	Installments *int       `json:"installments"`
-	DueDay       int        `json:"due_day" binding:"required"`
-	StartDate    time.Time  `json:"start_date" binding:"required"`
-	EndDate      *time.Time `json:"end_date"`
+	Description  string         `json:"description" binding:"required"`
+	Amount       float64        `json:"amount" binding:"required"`
+	Type         string         `json:"type" binding:"required"`
+	BudgetID     *string        `json:"budget_id"`
+	Budget       *BudgetResponse `json:"budget"`
+	Recurrency   *string        `json:"recurrency"`
+	Method       string         `json:"method" binding:"required"`
+	Installments *int           `json:"installments"`
+	DueDay       int            `json:"due_day" binding:"required"`
+	StartDate    time.Time      `json:"start_date" binding:"required"`
+	EndDate      *time.Time     `json:"end_date"`
 }
 
 // ExpenseResponse representa os dados retornados de uma despesa

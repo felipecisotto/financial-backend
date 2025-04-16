@@ -31,6 +31,7 @@ func (g *expenseGateway) Create(ctx context.Context, expense models.Expense) err
 		Description:  expense.Description(),
 		Amount:       expense.Amount(),
 		Type:         string(expense.Type()),
+		BudgetID:     expense.BudgetId(),
 		Recurrency:   (*string)(expense.Recurrency()),
 		Method:       string(expense.Method()),
 		Installments: expense.Installments(),
@@ -80,6 +81,16 @@ func (g *expenseGateway) List(ctx context.Context, description, expenseType, cat
 }
 
 func (g *expenseGateway) toModel(entity *entities.Expense) models.Expense {
+	var budget *models.Budget
+	if entity.Budget != nil {
+		newBudget := models.NewBudget( // Create a new instance
+			entity.ID,
+			entity.Amount,
+			entity.Description,
+			entity.EndDate,
+		)
+		budget = &newBudget
+	}
 	expense, _ := models.NewExpense(
 		entity.ID,
 		entity.Description,
@@ -92,6 +103,7 @@ func (g *expenseGateway) toModel(entity *entities.Expense) models.Expense {
 		entity.DueDay,
 		entity.StartDate,
 		entity.EndDate,
+		budget,
 	)
 	return expense
 }

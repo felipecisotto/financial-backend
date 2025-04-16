@@ -72,7 +72,7 @@ func (r *repository) List(ctx context.Context, description, expenseType, categor
 		query = query.Where("recurrecy = ?", recurrecy)
 	}
 
-	if err := query.Find(&expenses).Error; err != nil {
+	if err := query.Preload("Budget").Find(&expenses).Error; err != nil {
 		return nil, 0, fmt.Errorf("erro ao listar despesas: %v", err)
 	}
 

@@ -36,6 +36,7 @@ type Expense interface {
 	Installments() *int
 	DueDay() int
 	BudgetId() *string
+	Budget() *Budget
 	StartDate() time.Time
 	EndDate() *time.Time
 }
@@ -51,6 +52,7 @@ type expense struct {
 	installments *int
 	dueDay       int
 	budgetId     *string
+	budget       *Budget
 	startDate    time.Time
 	endDate      *time.Time
 }
@@ -66,6 +68,7 @@ func NewExpense(
 	dueDay int,
 	startDate time.Time,
 	endDate *time.Time,
+	budget *Budget,
 ) (Expense, error) {
 	if expenseType == string(ExpenseTypeRecurring) && recurrency == nil {
 		return nil, fmt.Errorf("quando o tipo de despesa é recorrente, é necessário ter preencher a recorencia")
@@ -93,6 +96,7 @@ func NewExpense(
 		budgetId:     budgetId,
 		startDate:    startDate,
 		endDate:      endDate,
+		budget:       budget,
 	}, nil
 }
 
@@ -128,7 +132,10 @@ func (e *expense) StartDate() time.Time {
 	return e.startDate
 }
 
-// BudgetId implements Expense.
+func (e *expense) Budget() *Budget {
+	return e.budget
+}
+
 func (e *expense) BudgetId() *string {
 	return e.budgetId
 }

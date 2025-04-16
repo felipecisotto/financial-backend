@@ -56,6 +56,7 @@ func (uc *useCase) Create(ctx context.Context, input *dtos.ExpenseDTO) (*dtos.Ex
 		input.DueDay,
 		input.StartDate,
 		newEndDate,
+		nil,
 	)
 
 	if err != nil {
@@ -112,6 +113,20 @@ func (uc *useCase) List(ctx context.Context, request *dtos.ListExpensesRequest) 
 }
 
 func (uc *useCase) toExpenseResponse(expense models.Expense) *dtos.ExpenseResponse {
+	var budget *dtos.BudgetResponse
+	if expense.Budget() != nil {
+		budgetModel := expense.Budget()
+		budget = &dtos.BudgetResponse{
+			ID:          (*budgetModel).ID(),
+			Amount:      (*budgetModel).Amount(),
+			Description: (*budgetModel).Description(),
+			EndDate:     (*budgetModel).EndDate(),
+			Status:      string((*budgetModel).Status()),
+			CreatedAt:   (*budgetModel).CreatedAt(),
+			UpdatedAt:   (*budgetModel).UpdatedAt(),
+		}
+	}
+
 	return &dtos.ExpenseResponse{
 		ID: expense.Id(),
 		ExpenseDTO: dtos.ExpenseDTO{
@@ -125,6 +140,7 @@ func (uc *useCase) toExpenseResponse(expense models.Expense) *dtos.ExpenseRespon
 			DueDay:       expense.DueDay(),
 			StartDate:    expense.StartDate(),
 			EndDate:      expense.EndDate(),
+			Budget:       budget,
 		},
 	}
 }
