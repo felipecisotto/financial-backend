@@ -2,9 +2,7 @@ package gateways
 
 import (
 	"context"
-	"time"
-
-	"financial-backend/internal/entities"
+	"financial-backend/internal/mappers"
 	"financial-backend/internal/models"
 	"financial-backend/internal/repositories/budget"
 )
@@ -26,26 +24,12 @@ func NewBudgetGateway(repo budget.Repository) BudgetGateway {
 }
 
 func (g *budgetGateway) Create(ctx context.Context, budget models.Budget) error {
-	entity := &entities.Budget{
-		ID:          budget.ID(),
-		Amount:      budget.Amount(),
-		Description: budget.Description(),
-		EndDate:     budget.EndDate(),
-		CreatedAt:   budget.CreatedAt(),
-		UpdatedAt:   budget.UpdatedAt(),
-	}
+	entity := mappers.ToBudgetEntity(budget)
 	return g.repo.Create(ctx, entity)
 }
 
 func (g *budgetGateway) Update(ctx context.Context, budget models.Budget) error {
-	entity := &entities.Budget{
-		ID:          budget.ID(),
-		Amount:      budget.Amount(),
-		Description: budget.Description(),
-		EndDate:     budget.EndDate(),
-		CreatedAt:   budget.CreatedAt(),
-		UpdatedAt:   time.Now(),
-	}
+	entity := mappers.ToBudgetEntity(budget)
 	return g.repo.Update(ctx, entity)
 }
 
@@ -58,7 +42,7 @@ func (g *budgetGateway) Get(ctx context.Context, id string) (models.Budget, erro
 	if err != nil {
 		return nil, err
 	}
-	return g.toModel(entity), nil
+	return mappers.ToBudgetModel(entity), nil
 }
 
 func (g *budgetGateway) List(ctx context.Context, status string, description string, page models.PageRequest) ([]models.Budget, int64, error) {
@@ -69,16 +53,7 @@ func (g *budgetGateway) List(ctx context.Context, status string, description str
 
 	budgets := make([]models.Budget, len(entities))
 	for i, entity := range entities {
-		budgets[i] = g.toModel(&entity)
+		budgets[i] = mappers.ToBudgetModel(&entity)
 	}
 	return budgets, count, nil
-}
-
-func (g *budgetGateway) toModel(entity *entities.Budget) models.Budget {
-	return models.NewBudget(
-		entity.ID,
-		entity.Amount,
-		entity.Description,
-		entity.EndDate,
-	)
 }

@@ -59,11 +59,11 @@ func SetupDatabase(cfg *Config) (*gorm.DB, error) {
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
 		logger.Config{
-			SlowThreshold:             time.Second,   // Slow SQL threshold
+			SlowThreshold:             time.Second, // Slow SQL threshold
 			LogLevel:                  logger.Info, // Log level
-			IgnoreRecordNotFoundError: true,          // Ignore ErrRecordNotFound error for logger
-			ParameterizedQueries:      false,          // Don't include params in the SQL log
-			Colorful:                  true,         // Disable color
+			IgnoreRecordNotFoundError: true,        // Ignore ErrRecordNotFound error for logger
+			ParameterizedQueries:      false,       // Don't include params in the SQL log
+			Colorful:                  true,        // Disable color
 		},
 	)
 
@@ -74,7 +74,7 @@ func SetupDatabase(cfg *Config) (*gorm.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("erro ao conectar ao banco de dados: %v", err)
 	}
-	db.AutoMigrate(&entities.Budget{}, &entities.Expense{}, &entities.Income{})
+	db.AutoMigrate(&entities.Budget{}, &entities.Expense{}, &entities.Income{}, &entities.BudgetMovement{})
 	return db, nil
 }
 

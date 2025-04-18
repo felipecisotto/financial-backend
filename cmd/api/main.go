@@ -12,9 +12,11 @@ import (
 	"financial-backend/internal/controllers"
 	"financial-backend/internal/gateways"
 	budgetRepo "financial-backend/internal/repositories/budget"
+	budgetMovementRepo "financial-backend/internal/repositories/budget_movement"
 	expenseRepo "financial-backend/internal/repositories/expense"
 	incomeRepo "financial-backend/internal/repositories/income"
 	budgetUseCase "financial-backend/internal/usecases/budget"
+	budgetMovementUseCase "financial-backend/internal/usecases/budget_movement"
 	expenseUseCase "financial-backend/internal/usecases/expense"
 	incomeUseCase "financial-backend/internal/usecases/income"
 	"financial-backend/pkg/config"
@@ -42,21 +44,25 @@ func main() {
 	expenseRepository := expenseRepo.NewRepository(db)
 	incomeRepository := incomeRepo.NewRepository(db)
 	budgetRepository := budgetRepo.NewRepository(db)
+	budgetMovementRepository := budgetMovementRepo.NewRepository(db)
 
 	// Inicializa os gateways
 	expenseGateway := gateways.NewExpenseGateway(expenseRepository)
 	incomeGateway := gateways.NewIncomeGateway(incomeRepository)
 	budgetGateway := gateways.NewBudgetGateway(budgetRepository)
+	budgetMovementGateway := gateways.NewBudgetMovementGateway(budgetMovementRepository)
 
 	// Inicializa os casos de uso
 	expenseUC := expenseUseCase.NewUseCase(expenseGateway, budgetGateway, cfg.DefaultDueDate)
 	incomeUC := incomeUseCase.NewUseCase(incomeGateway)
 	budgetUC := budgetUseCase.NewUseCase(budgetGateway)
+	budgetMovementUC := budgetMovementUseCase.NewBudgetMovementUseCase(budgetMovementGateway)
 
 	// Inicializa os controllers
 	expenseController := controllers.NewExpenseController(expenseUC)
 	incomeController := controllers.NewIncomeController(incomeUC)
 	budgetController := controllers.NewBudgetController(budgetUC)
+	budgetMovementController := controllers.NewBudgetMovementController(budgetMovementUC)
 
 	// Configura o router
 	router := gin.Default()
@@ -80,6 +86,7 @@ func main() {
 		expenseController.RegisterRoutes(api)
 		incomeController.RegisterRoutes(api)
 		budgetController.RegisterRoutes(api)
+		budgetMovementController.RegisterRoutes(api)
 	}
 
 	// Configura o servidor HTTP

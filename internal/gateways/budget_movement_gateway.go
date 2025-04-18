@@ -1,0 +1,55 @@
+package gateways
+
+import (
+	"context"
+	"financial-backend/internal/mappers"
+	"financial-backend/internal/models"
+	budgetmovementRepository "financial-backend/internal/repositories/budget_movement"
+)
+
+type BudgetMovementGateway interface {
+	Create(ctx context.Context, budgetMovement models.BudgetMovement) error
+	List(ctx context.Context, page models.PageRequest) ([]models.BudgetMovement, int64, error)
+	GetByID(ctx context.Context, id string) (models.BudgetMovement, error)
+}
+
+type budgetMovementGateway struct {
+	repository budgetmovementRepository.Repository
+}
+
+func NewBudgetMovementGateway(repository budgetmovementRepository.Repository) BudgetMovementGateway {
+	return &budgetMovementGateway{
+		repository: repository,
+	}
+}
+
+// Create implements BudgetMovementGateway.
+func (b *budgetMovementGateway) Create(ctx context.Context, budgetMovement models.BudgetMovement) error {
+	return b.repository.Create(ctx, mappers.ToBudgetMovementEntity(budgetMovement))
+}
+
+// GetByID implements BudgetMovementGateway.
+func (b *budgetMovementGateway) GetByID(ctx context.Context, id string) (models.BudgetMovement, error) {
+	entity, err := b.repository.GetById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return mappers.ToBudgetMovementModel(*entity), nil
+}
+
+// List implements BudgetMovementGateway.
+func (b *budgetMovementGateway) List(ctx context.Context, page models.PageRequest) ([]models.BudgetMovement, int64, error) {
+	entities, count, err := b.repository.List(ctx, page)
+
+	if err != nil {
+		return nil, 0, err
+	}
+
+	responses := make([]models.BudgetMovement, len(entities))
+
+	for i, entity := range entities {
+		responses[i] = mappers.ToBudgetMovementModel(entity)
+	}
+	return responses, count, err
+}

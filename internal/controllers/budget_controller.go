@@ -24,7 +24,7 @@ func (c *BudgetController) Create(ctx *gin.Context) {
 		return
 	}
 
-	response, err := c.useCase.Create(ctx, &input)
+	response, err := c.useCase.Create(ctx, input)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

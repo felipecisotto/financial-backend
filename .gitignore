@@ -1,0 +1,36 @@
+# Go binary files
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go test binary files
+*.test
+
+# Vendor directory
+/vendor/
+
+# Go workspace files
+go.work
+go.work.sum
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Coverage files
+*.out
+*.cov
+
+# Build artifacts
+bin/
+
+.env 
+main
