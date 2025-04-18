@@ -34,9 +34,26 @@ func (c *BudgetMovementController) Create(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, response)
 }
 
+func (c *BudgetMovementController) Find(ctx *gin.Context) {
+	var params dtos.BudgetMovementParams
+
+	if err := ctx.ShouldBindQuery(&params); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+
+	response, err := c.useCase.Find(ctx, params)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
+
+	ctx.JSON(http.StatusOK, response)
+}
+
 func (c *BudgetMovementController) RegisterRoutes(router *gin.RouterGroup) {
 	budgets := router.Group("/movements")
 	{
 		budgets.POST("", c.Create)
+		budgets.GET("", c.Find)
 	}
 }

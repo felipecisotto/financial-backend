@@ -9,7 +9,7 @@ import (
 
 type BudgetMovementGateway interface {
 	Create(ctx context.Context, budgetMovement models.BudgetMovement) error
-	List(ctx context.Context, page models.PageRequest) ([]models.BudgetMovement, int64, error)
+	List(ctx context.Context, budgetId, movementType, origin string, month, year int, page models.PageRequest) ([]models.BudgetMovement, int64, error)
 	GetByID(ctx context.Context, id string) (models.BudgetMovement, error)
 }
 
@@ -39,13 +39,12 @@ func (b *budgetMovementGateway) GetByID(ctx context.Context, id string) (models.
 }
 
 // List implements BudgetMovementGateway.
-func (b *budgetMovementGateway) List(ctx context.Context, page models.PageRequest) ([]models.BudgetMovement, int64, error) {
-	entities, count, err := b.repository.List(ctx, page)
+func (b *budgetMovementGateway) List(ctx context.Context, budgetId, movementType, origin string, month, year int, page models.PageRequest) ([]models.BudgetMovement, int64, error) {
+	entities, count, err := b.repository.List(ctx, budgetId, movementType, origin, month, year, page)
 
 	if err != nil {
 		return nil, 0, err
 	}
-
 	responses := make([]models.BudgetMovement, len(entities))
 
 	for i, entity := range entities {

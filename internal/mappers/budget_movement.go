@@ -11,14 +11,15 @@ import (
 // ToEntity converts a BudgetMovement model to a BudgetMovement entity
 func ToBudgetMovementEntity(bm models.BudgetMovement) entities.BudgetMovement {
 	return entities.BudgetMovement{
-		ID:        bm.ID(),
-		BudgetId:  bm.BudgetId(),
-		Origin:    bm.Origin(),
-		Month:     bm.Month(),
-		Year:      bm.Year(),
-		Type:      bm.Type(),
-		Amount:    bm.Amount(),
-		CreatedAt: bm.CreatedAt(),
+		ID:                bm.ID(),
+		BudgetId:          bm.BudgetId(),
+		Origin:            bm.Origin(),
+		Month:             bm.Month(),
+		Year:              bm.Year(),
+		Type:              string(bm.Type()),
+		Amount:            bm.Amount(),
+		CreatedAt:         bm.CreatedAt(),
+		OriginDescription: nil,
 	}
 }
 
@@ -30,9 +31,10 @@ func ToBudgetMovementModel(bmEntity entities.BudgetMovement) models.BudgetMoveme
 		bmEntity.BudgetId,
 		budget,
 		bmEntity.Origin,
+		bmEntity.OriginDescription,
 		bmEntity.Month,
 		bmEntity.Year,
-		bmEntity.Type,
+		models.MovementType(bmEntity.Type),
 		bmEntity.Amount,
 	)
 }
@@ -41,24 +43,26 @@ func ToBudgetMovementModel(bmEntity entities.BudgetMovement) models.BudgetMoveme
 func ToBudgetMovementDTO(bm models.BudgetMovement) dtos.BudgetMovementResponse {
 	if bm.Budget() != nil {
 		return dtos.BudgetMovementResponse{
-			ID:        bm.ID(),
-			Origin:    bm.Origin(),
-			Budget:    ToBudgetResponse(bm.Budget()),
-			Month:     bm.Month(),
-			Year:      bm.Year(),
-			Type:      bm.Type(),
-			Amount:    bm.Amount(),
-			CreatedAt: bm.CreatedAt(),
+			ID:                bm.ID(),
+			Origin:            bm.Origin(),
+			OriginDescription: bm.OriginDescription(),
+			Budget:            ToBudgetResponse(bm.Budget()),
+			Month:             bm.Month(),
+			Year:              bm.Year(),
+			Type:              string(bm.Type()),
+			Amount:            bm.Amount(),
+			CreatedAt:         bm.CreatedAt(),
 		}
 	} else {
 		return dtos.BudgetMovementResponse{
-			ID:        bm.ID(),
-			Origin:    bm.Origin(),
-			Month:     bm.Month(),
-			Year:      bm.Year(),
-			Type:      bm.Type(),
-			Amount:    bm.Amount(),
-			CreatedAt: bm.CreatedAt(),
+			ID:                bm.ID(),
+			Origin:            bm.Origin(),
+			OriginDescription: bm.OriginDescription(),
+			Month:             bm.Month(),
+			Year:              bm.Year(),
+			Type:              string(bm.Type()),
+			Amount:            bm.Amount(),
+			CreatedAt:         bm.CreatedAt(),
 		}
 	}
 
@@ -70,9 +74,10 @@ func FromDTOToBudgetMovementModel(bm dtos.BudgetMovementRequest) models.BudgetMo
 		bm.BudgetId,
 		nil,
 		bm.Origin,
+		nil,
 		bm.Month,
 		bm.Year,
-		bm.Type,
+		models.MovementType(bm.Type),
 		bm.Amount,
 	)
 }

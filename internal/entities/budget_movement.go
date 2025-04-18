@@ -14,4 +14,7 @@ type BudgetMovement struct {
 	Type      string
 	Amount    int
 	CreatedAt time.Time
+
+	// field for read
+	OriginDescription *string `gorm:"->;-:migration"`
 }
