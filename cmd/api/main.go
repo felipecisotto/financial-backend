@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"financial-backend/internal/controllers"
+	"financial-backend/internal/events"
 	_ "financial-backend/internal/events"
 	"financial-backend/internal/gateways"
 	budgetRepo "financial-backend/internal/repositories/budget"
@@ -59,13 +60,16 @@ func main() {
 	expenseUC := expenseUseCase.NewUseCase(expenseGateway, budgetGateway, eventPublisher, cfg.DefaultDueDate)
 	incomeUC := incomeUseCase.NewUseCase(incomeGateway)
 	budgetUC := budgetUseCase.NewUseCase(budgetGateway)
-	budgetMovementUC := budgetMovementUseCase.NewBudgetMovementUseCase(budgetMovementGateway)
+	budgetMovementUC := budgetMovementUseCase.NewBudgetMovementUseCase(budgetMovementGateway, budgetGateway)
 
 	// Inicializa os controllers
 	expenseController := controllers.NewExpenseController(expenseUC)
 	incomeController := controllers.NewIncomeController(incomeUC)
 	budgetController := controllers.NewBudgetController(budgetUC)
 	budgetMovementController := controllers.NewBudgetMovementController(budgetMovementUC)
+
+	//register handlers
+	eventPublisher.RegisterHandler(events.NewExpenseCreatedHandler(db, budgetMovementUC))
 
 	// Configura o router
 	router := gin.Default()

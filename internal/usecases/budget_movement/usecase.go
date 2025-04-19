@@ -11,14 +11,20 @@ type UseCase interface {
 	FindByID(ctx context.Context, id string)
 	Create(ctx context.Context, request dtos.BudgetMovementRequest) (dtos.BudgetMovementResponse, error)
 	Find(ctx context.Context, params dtos.BudgetMovementParams) (models.Page[dtos.BudgetMovementResponse], error)
+	CreateExpenseMovement(ctx context.Context, expense models.Expense) error
 }
 
 type useCase struct {
-	gateway gateways.BudgetMovementGateway
+	gateway      gateways.BudgetMovementGateway
+	budgetGatway gateways.BudgetGateway
 }
 
-func NewBudgetMovementUseCase(gateway gateways.BudgetMovementGateway) UseCase {
+func NewBudgetMovementUseCase(
+	gateway gateways.BudgetMovementGateway,
+	budgetGateway gateways.BudgetGateway,
+) UseCase {
 	return &useCase{
-		gateway: gateway,
+		budgetGatway: budgetGateway,
+		gateway:      gateway,
 	}
 }

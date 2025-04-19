@@ -10,6 +10,8 @@ const (
 	MovementTransfer MovementType = "transfer"
 	MovementIncome   MovementType = "income"
 	MovementExpense  MovementType = "expense"
+	MovementIncrease MovementType = "increase"
+	MovementDecrease MovementType = "decrease"
 )
 
 // BudgetMovementInterface defines the methods for BudgetMovement
