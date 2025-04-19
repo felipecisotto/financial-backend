@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -23,6 +24,24 @@ type Config struct {
 	DBPassword     string
 	DBName         string
 	DefaultDueDate int
+}
+
+var (
+	dbInstance *gorm.DB
+	dbOnce sync.Once
+)
+
+func GetDatabase() (*gorm.DB, error) {
+	var err error
+	dbOnce.Do(func() {
+		cfg, loadErr := LoadConfig()
+		if loadErr != nil {
+			err = loadErr
+			return 
+		}
+		dbInstance, err = SetupDatabase(cfg)
+	})
+	return dbInstance, err
 }
 
 // LoadConfig carrega as configurações do ambiente

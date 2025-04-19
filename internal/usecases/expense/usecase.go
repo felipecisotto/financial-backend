@@ -4,18 +4,17 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"time"
 
 	"financial-backend/internal/dtos"
 	"financial-backend/internal/gateways"
 	"financial-backend/internal/models"
-
-	"github.com/google/uuid"
+	"financial-backend/pkg/config"
 )
 
 type useCase struct {
 	expenseGateway gateways.ExpenseGateway
 	budgetGateway  gateways.BudgetGateway
+	eventPublisher config.Publisher
 	defaultDueDate int
 }
 
@@ -26,48 +25,13 @@ type UseCase interface {
 	List(ctx context.Context, input *dtos.ListExpensesRequest) (*models.Page[*dtos.ExpenseResponse], error)
 }
 
-func NewUseCase(expenseGateway gateways.ExpenseGateway, budgetGateway gateways.BudgetGateway, defaultDueDate int) UseCase {
+func NewUseCase(expenseGateway gateways.ExpenseGateway, budgetGateway gateways.BudgetGateway, eventPublisher config.Publisher, defaultDueDate int) UseCase {
 	return &useCase{
 		expenseGateway: expenseGateway,
 		budgetGateway:  budgetGateway,
+		eventPublisher: eventPublisher,
 		defaultDueDate: defaultDueDate,
 	}
-}
-
-func (uc *useCase) Create(ctx context.Context, input *dtos.ExpenseDTO) (*dtos.ExpenseResponse, error) {
-	var newEndDate *time.Time
-
-	if input.Installments != nil && input.EndDate == nil {
-		newEndDateValue := time.Date(time.Now().Year(), time.Now().Month()+time.Month(*input.Installments), uc.defaultDueDate, 0, 0, 0, 0, time.UTC)
-		newEndDate = &newEndDateValue // Take the address of the new time.Time value
-	} else {
-		newEndDate = input.EndDate
-	}
-
-	expense, err := models.NewExpense(
-		uuid.New().String(),
-		input.Description,
-		input.Amount,
-		input.Type,
-		input.BudgetID,
-		input.Recurrency,
-		input.Method,
-		input.Installments,
-		input.DueDay,
-		input.StartDate,
-		newEndDate,
-		nil,
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if err := uc.expenseGateway.Create(ctx, expense); err != nil {
-		return nil, fmt.Errorf("erro ao criar despesa: %v", err)
-	}
-
-	return uc.toExpenseResponse(expense), nil
 }
 
 func (uc *useCase) Delete(ctx context.Context, id string) error {
@@ -94,6 +58,10 @@ func (uc *useCase) List(ctx context.Context, request *dtos.ListExpensesRequest) 
 		request.BudgetID,
 		request.Recurrency,
 		request.Method,
+		models.PageRequest{
+			Limit: request.Limit,
+			Page:  request.Page,
+		},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("erro ao listar despesas: %v", err)

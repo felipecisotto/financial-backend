@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"financial-backend/internal/entities"
+	"financial-backend/internal/models"
 
 	"gorm.io/gorm"
 )
@@ -37,7 +38,7 @@ func (r *repository) Get(ctx context.Context, id string) (*entities.Expense, err
 	return &expense, nil
 }
 
-func (r *repository) List(ctx context.Context, description, expenseType, category, budgetId, recurrecy, method string) (expenses []*entities.Expense, count int64, err error) {
+func (r *repository) List(ctx context.Context, description, expenseType, category, budgetId, recurrecy, method string, page models.PageRequest) (expenses []*entities.Expense, count int64, err error) {
 	query := r.db.WithContext(ctx)
 
 	if description != "" {
@@ -72,7 +73,7 @@ func (r *repository) List(ctx context.Context, description, expenseType, categor
 		query = query.Where("recurrecy = ?", recurrecy)
 	}
 
-	if err := query.Preload("Budget").Find(&expenses).Error; err != nil {
+	if err := query.Preload("Budget").Offset(page.Offset()).Limit(int(page.Limit)).Find(&expenses).Error; err != nil {
 		return nil, 0, fmt.Errorf("erro ao listar despesas: %v", err)
 	}
 

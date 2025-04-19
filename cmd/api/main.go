@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"financial-backend/internal/controllers"
+	_ "financial-backend/internal/events"
 	"financial-backend/internal/gateways"
 	budgetRepo "financial-backend/internal/repositories/budget"
 	budgetMovementRepo "financial-backend/internal/repositories/budget_movement"
@@ -35,10 +36,12 @@ func main() {
 	}
 
 	// Inicializa a conexão com o banco de dados
-	db, err := config.SetupDatabase(cfg)
+	db, err := config.GetDatabase()
 	if err != nil {
 		log.Fatalf("Erro ao conectar ao banco de dados: %v", err)
 	}
+
+	eventPublisher := config.GetPublisher()
 
 	// Inicializa os repositórios
 	expenseRepository := expenseRepo.NewRepository(db)
@@ -53,7 +56,7 @@ func main() {
 	budgetMovementGateway := gateways.NewBudgetMovementGateway(budgetMovementRepository)
 
 	// Inicializa os casos de uso
-	expenseUC := expenseUseCase.NewUseCase(expenseGateway, budgetGateway, cfg.DefaultDueDate)
+	expenseUC := expenseUseCase.NewUseCase(expenseGateway, budgetGateway, eventPublisher, cfg.DefaultDueDate)
 	incomeUC := incomeUseCase.NewUseCase(incomeGateway)
 	budgetUC := budgetUseCase.NewUseCase(budgetGateway)
 	budgetMovementUC := budgetMovementUseCase.NewBudgetMovementUseCase(budgetMovementGateway)
