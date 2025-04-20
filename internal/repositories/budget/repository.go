@@ -13,4 +13,5 @@ type Repository interface {
 	Delete(ctx context.Context, id string) error
 	Get(ctx context.Context, id string) (*entities.Budget, error)
 	List(ctx context.Context, status string, description string, page models.PageRequest) ([]entities.Budget, int64, error)
+	GetBudgetsWithoutMovement(ctx context.Context) ([]entities.Budget, error)
 }

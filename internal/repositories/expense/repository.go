@@ -13,4 +13,5 @@ type Repository interface {
 	Delete(ctx context.Context, id string) error
 	Get(ctx context.Context, id string) (*entities.Expense, error)
 	List(ctx context.Context, description, expenseType, category, budgetId, recurrecy, method string, page models.PageRequest) ([]*entities.Expense, int64, error)
+	GetExpensesWithoutMovimentInMonth(ctx context.Context) ([]*entities.Expense, error)
 }

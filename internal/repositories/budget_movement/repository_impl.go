@@ -18,6 +18,10 @@ func (r *repository) Create(ctx context.Context, budgetMovement entities.BudgetM
 	return r.db.WithContext(ctx).Create(budgetMovement).Error
 }
 
+func (r *repository) CreateAll(ctx context.Context, budgetMovements []entities.BudgetMovement) error {
+	return r.db.WithContext(ctx).CreateInBatches(budgetMovements, 50).Error
+}
+
 // GetById implements Repository.
 func (r *repository) GetById(ctx context.Context, id string) (budget *entities.BudgetMovement, err error) {
 	if err := r.db.WithContext(ctx).First(&budget, "id = ?", id).Error; err != nil {

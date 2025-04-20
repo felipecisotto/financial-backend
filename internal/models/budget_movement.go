@@ -12,6 +12,7 @@ const (
 	MovementExpense  MovementType = "expense"
 	MovementIncrease MovementType = "increase"
 	MovementDecrease MovementType = "decrease"
+	MovementStart    MovementType = "start"
 )
 
 // BudgetMovementInterface defines the methods for BudgetMovement
@@ -54,6 +55,10 @@ func NewBudgetMovement(
 	movementType MovementType,
 	amount int,
 ) BudgetMovement {
+	newAmount := amount
+	if (movementType == MovementExpense || movementType == MovementDecrease) && amount > 0 {
+		newAmount = amount * -1
+	}
 	return &budgetMovement{
 		id:                id,
 		budgetId:          budgetId,
@@ -63,7 +68,7 @@ func NewBudgetMovement(
 		month:             month,
 		year:              year,
 		movementType:      movementType,
-		amount:            amount,
+		amount:            newAmount,
 		createdAt:         time.Now(),
 	}
 }

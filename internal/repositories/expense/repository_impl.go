@@ -82,4 +82,25 @@ func (r *repository) List(ctx context.Context, description, expenseType, categor
 	}
 
 	return expenses, count, nil
+
+}
+
+func (r *repository) GetExpensesWithoutMovimentInMonth(ctx context.Context) (expenses []*entities.Expense, err error) {
+	query := `with expense as (
+					select *
+					from expenses
+					where method != 'credit_card'
+					and type = 'recurring'
+					and (end_date is null or end_date >= current_date)
+				)
+				select e.*
+				from budget_movements bm
+				right join expense e on (bm.origin = e.id and bm.month = cast(to_char(now() :: date, 'MM') as numeric))
+				where bm.id is null`
+
+	if err := r.db.WithContext(ctx).Raw(query).Find(&expenses).Error; err != nil {
+		return make([]*entities.Expense, 0), err
+	}
+
+	return
 }

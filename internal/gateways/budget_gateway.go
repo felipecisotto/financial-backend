@@ -13,6 +13,7 @@ type BudgetGateway interface {
 	Delete(ctx context.Context, id string) error
 	Get(ctx context.Context, id string) (models.Budget, error)
 	List(ctx context.Context, status string, description string, page models.PageRequest) ([]models.Budget, int64, error)
+	GetBudgetsWithoutMovement(ctx context.Context) ([]models.Budget, error)
 }
 
 type budgetGateway struct {
@@ -56,4 +57,18 @@ func (g *budgetGateway) List(ctx context.Context, status string, description str
 		budgets[i] = mappers.ToBudgetModel(&entity)
 	}
 	return budgets, count, nil
+}
+
+func (bg *budgetGateway) GetBudgetsWithoutMovement(ctx context.Context) (models []models.Budget, err error) {
+	entites, err := bg.repo.GetBudgetsWithoutMovement(ctx)
+
+	if err != nil {
+		return models, err
+	}
+
+	for _, entity := range entites {
+		models = append(models, mappers.ToBudgetModel(&entity))
+	}
+
+	return
 }

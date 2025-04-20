@@ -60,7 +60,7 @@ func main() {
 	expenseUC := expenseUseCase.NewUseCase(expenseGateway, budgetGateway, eventPublisher, cfg.DefaultDueDate)
 	incomeUC := incomeUseCase.NewUseCase(incomeGateway)
 	budgetUC := budgetUseCase.NewUseCase(budgetGateway)
-	budgetMovementUC := budgetMovementUseCase.NewBudgetMovementUseCase(budgetMovementGateway, budgetGateway)
+	budgetMovementUC := budgetMovementUseCase.NewBudgetMovementUseCase(budgetMovementGateway, budgetGateway, expenseGateway)
 
 	// Inicializa os controllers
 	expenseController := controllers.NewExpenseController(expenseUC)

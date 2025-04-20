@@ -62,3 +62,19 @@ func (r *repository) List(ctx context.Context, status string, description string
 
 	return budgets, count, nil
 }
+
+func (r *repository) GetBudgetsWithoutMovement(ctx context.Context) (reponses []entities.Budget, err error) {
+	query := `select *
+from budgets b
+where (end_date is null or end_date >= current_date)
+  and not exists(select 1
+                 from budget_movements bm
+                 where bm.month = cast(to_char(now() :: date, 'MM') as numeric)
+                   and bm.year = cast(to_char(now() :: date, 'YYYY') as numeric)
+                   and bm.type = 'initial'
+                   and bm.budget_id = b.id)`
+	if err := r.db.WithContext(ctx).Raw(query).Find(reponses).Error; err != nil {
+		return []entities.Budget{}, err
+	}
+	return
+}

@@ -12,19 +12,23 @@ type UseCase interface {
 	Create(ctx context.Context, request dtos.BudgetMovementRequest) (dtos.BudgetMovementResponse, error)
 	Find(ctx context.Context, params dtos.BudgetMovementParams) (models.Page[dtos.BudgetMovementResponse], error)
 	CreateExpenseMovement(ctx context.Context, expense models.Expense) error
+	CreateRecurrencyMovements(ctx context.Context) error
 }
 
 type useCase struct {
-	gateway      gateways.BudgetMovementGateway
-	budgetGatway gateways.BudgetGateway
+	gateway        gateways.BudgetMovementGateway
+	budgetGatway   gateways.BudgetGateway
+	expenseGateway gateways.ExpenseGateway
 }
 
 func NewBudgetMovementUseCase(
 	gateway gateways.BudgetMovementGateway,
 	budgetGateway gateways.BudgetGateway,
+	expenseGateway gateways.ExpenseGateway,
 ) UseCase {
 	return &useCase{
-		budgetGatway: budgetGateway,
-		gateway:      gateway,
+		budgetGatway:   budgetGateway,
+		gateway:        gateway,
+		expenseGateway: expenseGateway,
 	}
 }

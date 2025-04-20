@@ -2,6 +2,7 @@ package gateways
 
 import (
 	"context"
+	"financial-backend/internal/entities"
 	"financial-backend/internal/mappers"
 	"financial-backend/internal/models"
 	budgetmovementRepository "financial-backend/internal/repositories/budget_movement"
@@ -9,6 +10,7 @@ import (
 
 type BudgetMovementGateway interface {
 	Create(ctx context.Context, budgetMovement models.BudgetMovement) error
+	CreateAll(ctx context.Context, movements []models.BudgetMovement) error
 	List(ctx context.Context, budgetId, movementType, origin string, month, year int, page models.PageRequest) ([]models.BudgetMovement, int64, error)
 	GetByID(ctx context.Context, id string) (models.BudgetMovement, error)
 }
@@ -51,4 +53,14 @@ func (b *budgetMovementGateway) List(ctx context.Context, budgetId, movementType
 		responses[i] = mappers.ToBudgetMovementModel(entity)
 	}
 	return responses, count, err
+}
+
+func (b *budgetMovementGateway) CreateAll(ctx context.Context, movements []models.BudgetMovement) error {
+	entities := make([]entities.BudgetMovement, len(movements))
+
+	for i, model := range movements {
+		entities[i] = mappers.ToBudgetMovementEntity(model)
+	}
+
+	return b.repository.CreateAll(ctx, entities)
 }

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"financial-backend/internal/entities"
+	"financial-backend/internal/mappers"
 	"financial-backend/internal/models"
 	"financial-backend/internal/repositories/expense"
 )
@@ -15,6 +16,7 @@ type ExpenseGateway interface {
 	Delete(ctx context.Context, id string) error
 	Get(ctx context.Context, id string) (models.Expense, error)
 	List(ctx context.Context, description, expenseType, category, budgetId, recurrecy, method string, page models.PageRequest) ([]models.Expense, int64, error)
+	GetExpensesWithoutMovimentInMonth(ctx context.Context) ([]models.Expense, error)
 }
 
 type expenseGateway struct {
@@ -64,7 +66,7 @@ func (g *expenseGateway) Get(ctx context.Context, id string) (models.Expense, er
 	if err != nil {
 		return nil, err
 	}
-	return g.toModel(entity), nil
+	return mappers.ToExpenseModel(entity), nil
 }
 
 func (g *expenseGateway) List(ctx context.Context, description, expenseType, category, budgetId, recurrecy, method string, page models.PageRequest) ([]models.Expense, int64, error) {
@@ -75,35 +77,22 @@ func (g *expenseGateway) List(ctx context.Context, description, expenseType, cat
 
 	expenses := make([]models.Expense, len(entities))
 	for i, entity := range entities {
-		expenses[i] = g.toModel(entity)
+		expenses[i] = mappers.ToExpenseModel(entity)
 	}
 	return expenses, count, nil
 }
 
-func (g *expenseGateway) toModel(entity *entities.Expense) models.Expense {
-	var budget *models.Budget
-	if entity.Budget != nil {
-		newBudget := models.NewBudget( // Create a new instance
-			entity.ID,
-			entity.Amount,
-			entity.Description,
-			entity.EndDate,
-		)
-		budget = &newBudget
+func (g *expenseGateway) GetExpensesWithoutMovimentInMonth(ctx context.Context) ([]models.Expense, error) {
+	entities, err := g.repo.GetExpensesWithoutMovimentInMonth(ctx)
+	responses := make([]models.Expense, len(entities))
+
+	if err != nil {
+		return responses, err
 	}
-	expense, _ := models.NewExpense(
-		entity.ID,
-		entity.Description,
-		entity.Amount,
-		entity.Type,
-		entity.BudgetID,
-		entity.Recurrency,
-		entity.Method,
-		entity.Installments,
-		entity.DueDay,
-		entity.StartDate,
-		entity.EndDate,
-		budget,
-	)
-	return expense
+
+	for i, entity := range entities {
+		responses[i] = mappers.ToExpenseModel(entity)
+	}
+
+	return responses, nil
 }
