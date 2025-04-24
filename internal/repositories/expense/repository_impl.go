@@ -86,19 +86,27 @@ func (r *repository) List(ctx context.Context, description, expenseType, categor
 }
 
 func (r *repository) GetExpensesWithoutMovimentInMonth(ctx context.Context) (expenses []*entities.Expense, err error) {
-	query := `with expense as (
-					select *
-					from expenses
-					where method != 'credit_card'
-					and type = 'recurring'
-					and (end_date is null or end_date >= current_date)
-				)
-				select e.*
-				from budget_movements bm
-				right join expense e on (bm.origin = e.id and bm.month = cast(to_char(now() :: date, 'MM') as numeric))
-				where bm.id is null`
+	query := `with expense as (select *
+                 from expenses
+                 where method != 'credit_card'
+                   and type = 'recurring'
+                   and (end_date is null or end_date >= current_date)
+                   and budget_id is not null)
+select e.*,
+       b.description AS "budget__description",
+       b.amount      AS "budget__amount",
+       b.end_date    AS "budget__end_date",
+       b.created_at  AS "budget__created_at",
+       b.updated_at  AS "budget__updated_at"
+from budget_movements bm
+         right join expense e on (bm.origin = e.id and bm.month = cast(to_char(now() :: date, 'MM') as numeric) and
+                                  bm.year = cast(to_char(now() :: date, 'YYYY') as numeric))
+         join public.budgets b on e.budget_id = b.id
+where bm.id is null
+and e.budget_id is not null
+`
 
-	if err := r.db.WithContext(ctx).Raw(query).Find(&expenses).Error; err != nil {
+	if err := r.db.WithContext(ctx).Raw(query).Preload("Budget").Find(&expenses).Error; err != nil {
 		return make([]*entities.Expense, 0), err
 	}
 

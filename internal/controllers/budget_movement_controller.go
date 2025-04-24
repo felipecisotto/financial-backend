@@ -39,6 +39,7 @@ func (c *BudgetMovementController) Find(ctx *gin.Context) {
 
 	if err := ctx.ShouldBindQuery(&params); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
 	response, err := c.useCase.Find(ctx, params)
@@ -50,10 +51,20 @@ func (c *BudgetMovementController) Find(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response)
 }
 
+func (c *BudgetMovementController) ProcessMovements(ctx *gin.Context) {
+	if err := c.useCase.CreateRecurrencyMovements(ctx); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.Status(http.StatusNoContent)
+}
+
 func (c *BudgetMovementController) RegisterRoutes(router *gin.RouterGroup) {
 	budgets := router.Group("/movements")
 	{
 		budgets.POST("", c.Create)
 		budgets.GET("", c.Find)
+		budgets.POST("/recurrent", c.ProcessMovements)
 	}
 }
