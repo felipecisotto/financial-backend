@@ -14,4 +14,5 @@ type Repository interface {
 	Get(ctx context.Context, id string) (*entities.Expense, error)
 	List(ctx context.Context, description, expenseType, category, budgetId, recurrecy, method string, page models.PageRequest) ([]*entities.Expense, int64, error)
 	GetExpensesWithoutMovimentInMonth(ctx context.Context) ([]*entities.Expense, error)
+	SummaryByMonth(ctx context.Context, month int, year int) (float64, error)
 }

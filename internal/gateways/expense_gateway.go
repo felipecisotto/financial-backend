@@ -16,7 +16,8 @@ type ExpenseGateway interface {
 	Delete(ctx context.Context, id string) error
 	Get(ctx context.Context, id string) (models.Expense, error)
 	List(ctx context.Context, description, expenseType, category, budgetId, recurrecy, method string, page models.PageRequest) ([]models.Expense, int64, error)
-	GetExpensesWithoutMovimentInMonth(ctx context.Context) ([]models.Expense, error)
+	GetExpensesWithoutMovementInMonth(ctx context.Context) ([]models.Expense, error)
+	SummaryByMonth(ctx context.Context, month, year int) (amount float64, err error)
 }
 
 type expenseGateway struct {
@@ -82,7 +83,7 @@ func (g *expenseGateway) List(ctx context.Context, description, expenseType, cat
 	return expenses, count, nil
 }
 
-func (g *expenseGateway) GetExpensesWithoutMovimentInMonth(ctx context.Context) ([]models.Expense, error) {
+func (g *expenseGateway) GetExpensesWithoutMovementInMonth(ctx context.Context) ([]models.Expense, error) {
 	entities, err := g.repo.GetExpensesWithoutMovimentInMonth(ctx)
 	responses := make([]models.Expense, len(entities))
 
@@ -95,4 +96,11 @@ func (g *expenseGateway) GetExpensesWithoutMovimentInMonth(ctx context.Context) 
 	}
 
 	return responses, nil
+}
+func (g *expenseGateway) SummaryByMonth(ctx context.Context, month, year int) (amount float64, err error) {
+	amount, err = g.repo.SummaryByMonth(ctx, month, year)
+	if err != nil {
+		return 0, err
+	}
+	return amount, nil
 }

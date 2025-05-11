@@ -1,30 +1,30 @@
 package gateways
 
 import (
-	"context"
+	. "context"
 
 	"financial-backend/internal/entities"
-	"financial-backend/internal/models"
-	"financial-backend/internal/repositories/income"
+	. "financial-backend/internal/models"
+	. "financial-backend/internal/repositories/income"
 )
 
 type IncomeGateway interface {
-	Create(ctx context.Context, income models.Income) error
-	Update(ctx context.Context, income models.Income) error
-	Delete(ctx context.Context, id string) error
-	Get(ctx context.Context, id string) (models.Income, error)
-	List(ctx context.Context, incomeType, description string, page models.PageRequest) ([]models.Income, int64, error)
+	Create(ctx Context, income Income) error
+	Update(ctx Context, income Income) error
+	Delete(ctx Context, id string) error
+	Get(ctx Context, id string) (Income, error)
+	List(ctx Context, incomeType, description string, page PageRequest) ([]Income, int64, error)
+	SummaryByMonth(ctx Context, month, year int) (amount float64, err error)
 }
-
 type incomeGateway struct {
-	repo income.Repository
+	repo Repository
 }
 
-func NewIncomeGateway(repo income.Repository) IncomeGateway {
+func NewIncomeGateway(repo Repository) IncomeGateway {
 	return &incomeGateway{repo: repo}
 }
 
-func (g *incomeGateway) Create(ctx context.Context, income models.Income) error {
+func (g *incomeGateway) Create(ctx Context, income Income) error {
 	entity := &entities.Income{
 		ID:          income.ID(),
 		Description: income.Description(),
@@ -39,7 +39,7 @@ func (g *incomeGateway) Create(ctx context.Context, income models.Income) error 
 	return g.repo.Create(ctx, entity)
 }
 
-func (g *incomeGateway) Update(ctx context.Context, income models.Income) error {
+func (g *incomeGateway) Update(ctx Context, income Income) error {
 	entity := &entities.Income{
 		ID:          income.ID(),
 		Description: income.Description(),
@@ -54,11 +54,11 @@ func (g *incomeGateway) Update(ctx context.Context, income models.Income) error 
 	return g.repo.Update(ctx, entity)
 }
 
-func (g *incomeGateway) Delete(ctx context.Context, id string) error {
+func (g *incomeGateway) Delete(ctx Context, id string) error {
 	return g.repo.Delete(ctx, id)
 }
 
-func (g *incomeGateway) Get(ctx context.Context, id string) (models.Income, error) {
+func (g *incomeGateway) Get(ctx Context, id string) (Income, error) {
 	entity, err := g.repo.Get(ctx, id)
 	if err != nil {
 		return nil, err
@@ -66,28 +66,32 @@ func (g *incomeGateway) Get(ctx context.Context, id string) (models.Income, erro
 	return g.toModel(entity), nil
 }
 
-func (g *incomeGateway) List(ctx context.Context, incomeType, description string, page models.PageRequest) ([]models.Income, int64, error) {
+func (g *incomeGateway) List(ctx Context, incomeType, description string, page PageRequest) ([]Income, int64, error) {
 	entities, count, err := g.repo.List(ctx, description, incomeType, int(page.Limit), page.Offset())
 	if err != nil {
 		return nil, 0, err
 	}
 
-	incomes := make([]models.Income, len(entities))
+	incomes := make([]Income, len(entities))
 	for i, entity := range entities {
 		incomes[i] = g.toModel(entity)
 	}
 	return incomes, count, nil
 }
 
-func (g *incomeGateway) toModel(entity *entities.Income) models.Income {
-	income, _ := models.NewIncome(
+func (g *incomeGateway) toModel(entity *entities.Income) Income {
+	income, _ := NewIncome(
 		entity.ID,
 		entity.Description,
 		entity.Amount,
-		models.IncomeType(entity.Type),
+		IncomeType(entity.Type),
 		entity.DueDay,
 		entity.StartDate,
 		entity.EndDate,
 	)
 	return income
+}
+
+func (g *incomeGateway) SummaryByMonth(ctx Context, month, year int) (amount float64, err error) {
+	return g.repo.SummaryByMonth(ctx, month, year)
 }

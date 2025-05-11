@@ -4,7 +4,9 @@ import (
 	"context"
 	"financial-backend/internal/entities"
 	"financial-backend/internal/models"
+	"financial-backend/internal/views"
 	"fmt"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -95,6 +97,24 @@ func (r *repository) List(ctx context.Context, budgetId, movementType, origin st
 
 	if err := r.db.WithContext(ctx).Raw(countColumns+query, args...).Count(&count).Error; err != nil {
 		return nil, 0, fmt.Errorf("erro ao contar movimentações: %w", err)
+	}
+
+	return
+}
+
+func (r *repository) SummaryBudgetUsageByMonthYear(ctx context.Context, month, year int) (data []views.SummaryBudgetUtilization, err error) {
+	query := `select description,
+			   bu.amount,
+			   coalesce(sum(bm.amount),0) usage
+				from budgets bu
+				left join budget_movements bm on bu.id = bm.budget_id and type != 'start'
+		where (end_date >= ? or end_date is null)
+		group by bu.amount, description
+		order by usage desc`
+	firstOfNextMonth := time.Date(year, time.Month(month)+1, 1, 0, 0, 0, 0, time.UTC)
+
+	if err := r.db.WithContext(ctx).Raw(query, firstOfNextMonth).Scan(&data).Error; err != nil {
+		return []views.SummaryBudgetUtilization{}, fmt.Errorf("erro ao buscar resumo de utilização do orçamento: %w", err)
 	}
 
 	return

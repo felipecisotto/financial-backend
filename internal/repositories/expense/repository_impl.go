@@ -112,3 +112,15 @@ and e.budget_id is not null
 
 	return
 }
+func (r *repository) SummaryByMonth(ctx context.Context, month int, year int) (float64, error) {
+	query := "select sum(amount) as total_expense from expenses  where start_date >= ? and (end_date <= ? or end_date is null)"
+
+	startDate := fmt.Sprintf("%d-%02d-01", year, month)
+	endDate := fmt.Sprintf("%d-%02d-01", year, month+1)
+
+	var amount float64
+	if err := r.db.WithContext(ctx).Raw(query, startDate, endDate).Scan(&amount).Error; err != nil {
+		return 0, err
+	}
+	return amount, nil
+}
