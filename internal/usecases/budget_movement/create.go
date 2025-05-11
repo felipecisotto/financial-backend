@@ -87,7 +87,7 @@ func (uc *useCase) createBudgetStartMovements(ctx context.Context) (movements []
 
 func (uc *useCase) createExpenseRecurrencyMovements(ctx context.Context) ([]models.BudgetMovement, error) {
 	movements := []models.BudgetMovement{}
-	expenses, err := uc.expenseGateway.GetExpensesWithoutMovimentInMonth(ctx)
+	expenses, err := uc.expenseGateway.GetExpensesWithoutMovementInMonth(ctx)
 
 	if err != nil {
 		return make([]models.BudgetMovement, 0), err

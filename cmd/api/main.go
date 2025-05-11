@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"financial-backend/internal/usecases/dashboard"
 	"log"
 	"net/http"
 	"os"
@@ -61,12 +62,14 @@ func main() {
 	incomeUC := incomeUseCase.NewUseCase(incomeGateway)
 	budgetUC := budgetUseCase.NewUseCase(budgetGateway)
 	budgetMovementUC := budgetMovementUseCase.NewBudgetMovementUseCase(budgetMovementGateway, budgetGateway, expenseGateway)
+	dashboardUC := dashboard.NewDashBoardUseCase(expenseGateway, incomeGateway, budgetMovementGateway)
 
 	// Inicializa os controllers
 	expenseController := controllers.NewExpenseController(expenseUC)
 	incomeController := controllers.NewIncomeController(incomeUC)
 	budgetController := controllers.NewBudgetController(budgetUC)
 	budgetMovementController := controllers.NewBudgetMovementController(budgetMovementUC)
+	dashboardController := controllers.NewDashboardController(dashboardUC)
 
 	//register handlers
 	eventPublisher.RegisterHandler(events.NewExpenseCreatedHandler(db, budgetMovementUC))
@@ -94,6 +97,7 @@ func main() {
 		incomeController.RegisterRoutes(api)
 		budgetController.RegisterRoutes(api)
 		budgetMovementController.RegisterRoutes(api)
+		dashboardController.RegisterRoutes(api)
 	}
 
 	// Configura o servidor HTTP

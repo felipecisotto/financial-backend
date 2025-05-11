@@ -3,6 +3,7 @@ package income
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"financial-backend/internal/entities"
 
@@ -59,4 +60,15 @@ func (r *repository) List(ctx context.Context, incomeType, description string, l
 		return nil, 0, fmt.Errorf("erro ao contar receitas: %v", err)
 	}
 	return incomes, count, nil
+}
+
+func (r *repository) SummaryByMonth(ctx context.Context, month, year int) (amount float64, err error) {
+	startDate := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
+	endDate := startDate.AddDate(0, 1, 0).Add(-time.Nanosecond)
+	query := "select sum(amount) as total_income  from incomes  where start_date >= ? and (end_date <= ? or end_date is null)"
+
+	if err := r.db.WithContext(ctx).Raw(query, startDate, endDate).Scan(&amount).Error; err != nil {
+		return 0, err
+	}
+	return
 }
