@@ -2,6 +2,7 @@ name: Build and Publish Docker Image
 
 on:
   pull_request:
+    types: [closed]
     branches: [ "main" ]
 
 env:
@@ -10,6 +11,7 @@ env:
 
 jobs:
   version:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
@@ -19,46 +21,39 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get current version
-        id: current-version
+      - name: Get latest tag
+        id: get-latest-tag
         run: |
-          if [ -f "VERSION" ]; then
-            echo "version=$(cat VERSION)" >> $GITHUB_OUTPUT
-          else
-            echo "version=0.1.0" >> $GITHUB_OUTPUT
-          fi
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.1.0")
+          echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
 
       - name: Calculate new version
         id: version
         run: |
-          CURRENT_VERSION=${{ steps.current-version.outputs.version }}
-          IFS='.' read -r major minor patch <<< "$CURRENT_VERSION"
+          LATEST_TAG=${{ steps.get-latest-tag.outputs.latest_tag }}
+          IFS='.' read -r major minor patch <<< "$LATEST_TAG"
           
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            BRANCH_NAME="${{ github.head_ref }}"
-            if [[ "$BRANCH_NAME" == feature/* ]]; then
-              minor=$((minor + 1))
-              patch=0
-            elif [[ "$BRANCH_NAME" == fix/* ]] || [[ "$BRANCH_NAME" == hotfix/* ]]; then
-              patch=$((patch + 1))
-            fi
+          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+          if [[ "$BRANCH_NAME" == feature/* ]]; then
+            minor=$((minor + 1))
+            patch=0
+          elif [[ "$BRANCH_NAME" == fix/* ]] || [[ "$BRANCH_NAME" == hotfix/* ]]; then
+            patch=$((patch + 1))
           fi
           
           NEW_VERSION="$major.$minor.$patch"
           echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "$NEW_VERSION" > VERSION
 
-      - name: Commit version file
-        if: github.event_name == 'pull_request'
+      - name: Create Git tag
         run: |
           git config --global user.name 'GitHub Actions'
           git config --global user.email 'github-actions@github.com'
-          git add VERSION
-          git commit -m "Bump version to ${{ steps.version.outputs.version }}"
-          git push
+          git tag -a "${{ steps.version.outputs.version }}" -m "Release version ${{ steps.version.outputs.version }}"
+          git push origin "${{ steps.version.outputs.version }}"
 
   build-and-push:
     needs: version
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -82,13 +77,13 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=${{ needs.version.outputs.version }}
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
-          push: ${{ github.event_name != 'pull_request' }}
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
