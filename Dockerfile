@@ -30,7 +30,9 @@ WORKDIR /app
 
 # Copy the binary from builder
 COPY --from=builder /app/main .
-COPY --from=builder /app/.env .
+
+# Copy .env file if it exists
+RUN if [ -f /app/.env ]; then cp /app/.env .; fi
 
 # Create a non-root user
 RUN adduser -D -g '' appuser
@@ -40,4 +42,4 @@ USER appuser
 EXPOSE 8080
 
 # Run the application
-CMD ["./main"] 
+CMD ["./main"]
