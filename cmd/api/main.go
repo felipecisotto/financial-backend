@@ -23,6 +23,7 @@ import (
 	expenseUseCase "financial-backend/internal/usecases/expense"
 	incomeUseCase "financial-backend/internal/usecases/income"
 	"financial-backend/pkg/config"
+	"financial-backend/pkg/telemetry"
 
 	"github.com/gin-gonic/gin"
 )
@@ -30,6 +31,11 @@ import (
 func main() {
 	// Configuração do logger
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
+	// Initialize OpenTelemetry
+	if err := telemetry.InitTelemetry("financial-backend"); err != nil {
+		log.Fatalf("Failed to initialize telemetry: %v", err)
+	}
 
 	// Carrega as configurações do ambiente
 	cfg, err := config.LoadConfig()
@@ -76,6 +82,9 @@ func main() {
 
 	// Configura o router
 	router := gin.Default()
+
+	// Add OpenTelemetry middleware
+	router.Use(telemetry.GinMiddleware())
 
 	// Middleware de CORS
 	router.Use(func(c *gin.Context) {
@@ -130,6 +139,11 @@ func main() {
 	// Contexto com timeout para o shutdown
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+
+	// Shutdown telemetry
+	if err := telemetry.Shutdown(ctx); err != nil {
+		log.Printf("Error shutting down telemetry: %v", err)
+	}
 
 	// Tenta realizar o shutdown gracioso
 	if err := srv.Shutdown(ctx); err != nil {
