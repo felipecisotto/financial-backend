@@ -89,6 +89,14 @@ func main() {
 		c.Next()
 	})
 
+	// Health check endpoint
+	router.GET("/ping", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"status": "ok",
+			"time":   time.Now().Format(time.RFC3339),
+		})
+	})
+
 	// Configura as rotas
 	api := router.Group("/api")
 	{
