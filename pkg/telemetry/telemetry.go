@@ -35,12 +35,12 @@ func InitTelemetry(serviceName string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create resource: %w", err)
 	}
-
 	// Create Prometheus exporter
 	exporter, err := prometheus.New()
 	if err != nil {
 		return fmt.Errorf("failed to create prometheus exporter: %w", err)
 	}
+
 
 	// Create meter provider with the exporter
 	meterProvider := sdkmetric.NewMeterProvider(
@@ -56,6 +56,7 @@ func InitTelemetry(serviceName string) error {
 	))
 
 	// Get meter from provider
+
 	meter = meterProvider.Meter(serviceName)
 
 	// Get tracer
@@ -70,7 +71,7 @@ func InitTelemetry(serviceName string) error {
 			Handler: mux,
 		}
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			fmt.Printf("Error starting metrics server: %v\n", err)
+      fmt.Printf("Error starting metrics server: %v\n", err)
 		}
 	}()
 
