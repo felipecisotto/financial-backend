@@ -28,7 +28,7 @@ type Config struct {
 
 var (
 	dbInstance *gorm.DB
-	dbOnce sync.Once
+	dbOnce     sync.Once
 )
 
 func GetDatabase() (*gorm.DB, error) {
@@ -37,7 +37,7 @@ func GetDatabase() (*gorm.DB, error) {
 		cfg, loadErr := LoadConfig()
 		if loadErr != nil {
 			err = loadErr
-			return 
+			return
 		}
 		dbInstance, err = SetupDatabase(cfg)
 	})
@@ -46,9 +46,8 @@ func GetDatabase() (*gorm.DB, error) {
 
 // LoadConfig carrega as configurações do ambiente
 func LoadConfig() (*Config, error) {
-	if err := godotenv.Load(); err != nil {
-		return nil, fmt.Errorf("erro ao carregar arquivo .env: %v", err)
-	}
+	// Tenta carregar o .env, mas ignora erro se não existir
+	_ = godotenv.Load()
 
 	defaultDueDate, _ := strconv.Atoi(getEnv("DEFAULT_DUE_DATE", "15"))
 
