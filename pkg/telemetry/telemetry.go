@@ -9,6 +9,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/prometheus"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/propagation"
@@ -99,22 +100,54 @@ func GetMeter() metric.Meter {
 	return meter
 }
 
+// routeAttributeKey é a chave usada internamente para passar a rota pelo contexto
+const routeAttributeKey = "otel-gin-route"
+
 // GinMiddleware returns the OpenTelemetry middleware for Gin
 func GinMiddleware() gin.HandlerFunc {
-	// Configuração para habilitar tanto traces quanto métricas
-	// Com a versão 0.60.0+, o otelgin agora suporta métricas nativamente
+	// Criamos um middleware customizado que vai trabalhar em conjunto com o otelgin
+	// para adicionar o atributo http.route às métricas
+	ginHandler := func(c *gin.Context) {
+		// Obter a rota completa do Gin
+		route := c.FullPath()
+
+		// Verificar se a rota existe
+		if route != "" {
+			// Armazenar a rota no contexto da requisição para uso posterior
+			c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), routeAttributeKey, route))
+		}
+
+		// Continuar o processamento
+		c.Next()
+	}
+
+	// Configuração do middleware do OpenTelemetry
 	options := []otelgin.Option{
 		// Usa explicitamente o MeterProvider para registrar métricas
 		otelgin.WithMeterProvider(meterProvider),
+
+		// Adiciona função para extrair o http.route das métricas
+		otelgin.WithMetricAttributeFn(func(req *http.Request) []attribute.KeyValue {
+			attrs := []attribute.KeyValue{}
+
+			// Tenta extrair a rota do contexto da requisição
+			if route, ok := req.Context().Value(routeAttributeKey).(string); ok && route != "" {
+				attrs = append(attrs, attribute.String("http.route", route))
+			}
+
+			return attrs
+		}),
 	}
 
-	// Este middleware agora irá gerar tanto traces quanto métricas
-	// As métricas HTTP incluem:
-	// - http.server.request.duration - tempo de processamento das requisições
-	// - http.server.active_requests - número de requisições ativas
-	// - http.server.request.body.size - tamanho do corpo da requisição
-	// - http.server.response.body.size - tamanho do corpo da resposta
-	return otelgin.Middleware("financial-backend", options...)
+	// Cria o middleware do OpenTelemetry
+	otelHandler := otelgin.Middleware("financial-backend", options...)
+
+	// Retorna um handler que combina nosso middleware para capturar rotas
+	// com o middleware do OpenTelemetry
+	return func(c *gin.Context) {
+		ginHandler(c)
+		otelHandler(c)
+	}
 }
 
 // Shutdown gracefully shuts down the telemetry system
