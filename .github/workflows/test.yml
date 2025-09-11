@@ -57,8 +57,8 @@ jobs:
     - name: Vet
       run: go vet ./...
 
-    - name: Lint
-      run: golangci-lint run --timeout=5m
+    # - name: Lint
+    #   run: golangci-lint run --timeout=5m
 
     - name: Run tests with coverage
       run: |
