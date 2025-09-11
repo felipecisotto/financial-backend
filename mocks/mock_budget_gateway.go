@@ -3,8 +3,9 @@ package mocks
 import (
 	"context"
 
-	"financial-backend/internal/domain/models"
 	"github.com/stretchr/testify/mock"
+
+	"financial-backend/internal/domain/models"
 )
 
 // MockBudgetGateway is a mock for gateways.BudgetGateway

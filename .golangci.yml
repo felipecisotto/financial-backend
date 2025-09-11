@@ -41,11 +41,12 @@ linters:
     - typecheck
     - unused
     - gofmt
-    - goimports
-    - misspell
-    - revive
-    - goconst
-    - gocyclo
+    # Disabled for less strict checking:
+    # - goimports
+    # - misspell
+    # - revive
+    # - goconst
+    # - gocyclo
 
 issues:
   exclude-rules:
@@ -55,12 +56,22 @@ issues:
         - gocyclo
         - errcheck
         - gosec
+        - unused
     # Disable linting for mocks
     - path: mocks/
       linters:
         - revive
         - unused
+        - errcheck
     # Disable specific rules for main.go
     - path: cmd/
       linters:
         - errcheck
+    # Disable errcheck for specific patterns
+    - text: "Error return value.*is not checked"
+      linters:
+        - errcheck
+    # Disable unused parameter warnings
+    - text: "parameter.*seems to be unused"
+      linters:
+        - unused

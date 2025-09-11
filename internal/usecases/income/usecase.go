@@ -2,11 +2,12 @@ package income
 
 import (
 	"context"
+	"fmt"
+	"math"
+
 	"financial-backend/internal/domain/models"
 	"financial-backend/internal/dto"
 	"financial-backend/internal/gateways"
-	"fmt"
-	"math"
 
 	"github.com/google/uuid"
 )

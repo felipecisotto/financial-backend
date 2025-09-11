@@ -1,12 +1,13 @@
 package factories
 
 import (
-	"financial-backend/internal/domain/entities"
-	"financial-backend/internal/dto/request"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
+
+	"financial-backend/internal/domain/entities"
+	"financial-backend/internal/dto/request"
 )
 
 // BudgetFactory provides factory methods for budget creation

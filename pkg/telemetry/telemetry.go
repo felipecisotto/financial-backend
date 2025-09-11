@@ -100,8 +100,11 @@ func GetMeter() metric.Meter {
 	return meter
 }
 
+// contextKey é um tipo customizado para evitar colisões nas chaves do contexto
+type contextKey string
+
 // routeAttributeKey é a chave usada internamente para passar a rota pelo contexto
-const routeAttributeKey = "otel-gin-route"
+const routeAttributeKey contextKey = "otel-gin-route"
 
 // GinMiddleware returns the OpenTelemetry middleware for Gin
 func GinMiddleware() gin.HandlerFunc {

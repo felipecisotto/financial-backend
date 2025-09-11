@@ -154,14 +154,6 @@ func validateInstallments(installments int) int {
 	return installments
 }
 
-func parseTime(timeStr string) time.Time {
-	t, err := time.Parse(time.RFC3339, timeStr)
-	if err != nil {
-		return time.Now()
-	}
-	return t
-}
-
 func parseTimeOrNow(startDate time.Time) time.Time {
 	if startDate.IsZero() {
 		return time.Now()

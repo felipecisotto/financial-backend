@@ -2,11 +2,12 @@ package expense
 
 import (
 	"context"
+	"fmt"
+	"time"
+
 	"financial-backend/internal/domain/models"
 	"financial-backend/internal/domain/models/events"
 	"financial-backend/internal/dto"
-	"fmt"
-	"time"
 
 	"github.com/google/uuid"
 )
