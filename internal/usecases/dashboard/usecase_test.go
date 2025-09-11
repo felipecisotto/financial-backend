@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"testing"
 
-	"financial-backend/internal/views"
+	"financial-backend/internal/dto/response"
 	"financial-backend/mocks"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -47,7 +46,7 @@ func (s *DashboardUseCaseTestSuite) TestGetSummary_Success() {
 	expectedExpense := 2000.0
 	expectedRemaining := expectedIncome - expectedExpense
 
-	expectedSummary := views.SummaryView{
+	expectedSummary := response.SummaryView{
 		TotalIncome:    expectedIncome,
 		TotalExpense:   expectedExpense,
 		TotalRemaining: expectedRemaining,
@@ -76,7 +75,7 @@ func (s *DashboardUseCaseTestSuite) TestGetSummary_IncomeGatewayError() {
 
 	assert.Error(s.T(), err)
 	assert.Contains(s.T(), err.Error(), "income gateway error")
-	assert.Equal(s.T(), views.SummaryView{}, result)
+	assert.Equal(s.T(), response.SummaryView{}, result)
 }
 
 func (s *DashboardUseCaseTestSuite) TestGetSummary_ExpenseGatewayError() {
@@ -91,7 +90,7 @@ func (s *DashboardUseCaseTestSuite) TestGetSummary_ExpenseGatewayError() {
 
 	assert.Error(s.T(), err)
 	assert.Contains(s.T(), err.Error(), "expense gateway error")
-	assert.Equal(s.T(), views.SummaryView{}, result)
+	assert.Equal(s.T(), response.SummaryView{}, result)
 }
 
 func (s *DashboardUseCaseTestSuite) TestGetSummary_BothGatewayErrors() {
@@ -106,7 +105,7 @@ func (s *DashboardUseCaseTestSuite) TestGetSummary_BothGatewayErrors() {
 
 	assert.Error(s.T(), err)
 	assert.Contains(s.T(), err.Error(), "income gateway error")
-	assert.Equal(s.T(), views.SummaryView{}, result)
+	assert.Equal(s.T(), response.SummaryView{}, result)
 }
 
 func (s *DashboardUseCaseTestSuite) TestGetSummary_NegativeRemaining() {
@@ -118,7 +117,7 @@ func (s *DashboardUseCaseTestSuite) TestGetSummary_NegativeRemaining() {
 	expectedExpense := 2000.0
 	expectedRemaining := expectedIncome - expectedExpense
 
-	expectedSummary := views.SummaryView{
+	expectedSummary := response.SummaryView{
 		TotalIncome:    expectedIncome,
 		TotalExpense:   expectedExpense,
 		TotalRemaining: expectedRemaining,
@@ -141,7 +140,7 @@ func (s *DashboardUseCaseTestSuite) TestSummaryBudgetUsageByMonthYear_Success() 
 	month := 1
 	year := 2024
 
-	expectedUtilizations := []views.SummaryBudgetUtilization{
+	expectedUtilizations := []response.SummaryBudgetUtilization{
 		{
 			Description: "Food Budget",
 			Amount:      1000.0,
@@ -173,7 +172,7 @@ func (s *DashboardUseCaseTestSuite) TestSummaryBudgetUsageByMonthYear_EmptyResul
 	month := 1
 	year := 2024
 
-	expectedUtilizations := []views.SummaryBudgetUtilization{}
+	expectedUtilizations := []response.SummaryBudgetUtilization{}
 
 	s.mockBudgetMovementGateway.On("SummaryBudgetUsageByMonthYear", ctx, month, year).Return(expectedUtilizations, nil)
 

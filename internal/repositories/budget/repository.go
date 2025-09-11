@@ -3,8 +3,8 @@ package budget
 import (
 	"context"
 
-	"financial-backend/internal/entities"
-	"financial-backend/internal/models"
+	"financial-backend/internal/domain/entities"
+	"financial-backend/internal/domain/models"
 )
 
 type Repository interface {

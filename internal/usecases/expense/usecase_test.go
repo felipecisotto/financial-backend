@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"financial-backend/internal/dtos"
-	"financial-backend/internal/models"
+	"financial-backend/internal/dto"
+	"financial-backend/internal/domain/models"
 	"financial-backend/mocks"
 
 	"github.com/stretchr/testify/assert"
@@ -38,7 +38,7 @@ func (s *ExpenseUseCaseTestSuite) TearDownTest() {
 }
 
 func (s *ExpenseUseCaseTestSuite) TestCreate_Success() {
-	input := &dtos.ExpenseDTO{
+	input := &dto.ExpenseDTO{
 		Description:  "Test Expense",
 		Amount:       100.0,
 		Type:         "VARIABLE",
@@ -67,7 +67,7 @@ func (s *ExpenseUseCaseTestSuite) TestCreate_Success() {
 }
 
 func (s *ExpenseUseCaseTestSuite) TestCreate_GatewayError() {
-	input := &dtos.ExpenseDTO{
+	input := &dto.ExpenseDTO{
 		Description:  "Test Expense",
 		Amount:       100.0,
 		Type:         "VARIABLE",
@@ -90,7 +90,7 @@ func (s *ExpenseUseCaseTestSuite) TestCreate_GatewayError() {
 }
 
 func (s *ExpenseUseCaseTestSuite) TestCreate_CreditCardExpense() {
-	input := &dtos.ExpenseDTO{
+	input := &dto.ExpenseDTO{
 		Description:  "Credit Card Expense",
 		Amount:       500.0,
 		Type:         "VARIABLE",
@@ -189,13 +189,11 @@ func (s *ExpenseUseCaseTestSuite) TestFindByID_NotFound() {
 
 func (s *ExpenseUseCaseTestSuite) TestList_Success() {
 	ctx := context.Background()
-	request := &dtos.ListExpensesRequest{
+	request := &dto.ListExpensesRequest{
 		Description: "Test",
 		Type:        "VARIABLE",
-		PageRequest: dtos.PageRequest{
-			Page:  1,
-			Limit: 10,
-		},
+		Page:        1,
+		Limit:       10,
 	}
 
 	// Create mock expenses
@@ -248,12 +246,10 @@ func (s *ExpenseUseCaseTestSuite) TestList_Success() {
 
 func (s *ExpenseUseCaseTestSuite) TestList_GatewayError() {
 	ctx := context.Background()
-	request := &dtos.ListExpensesRequest{
+	request := &dto.ListExpensesRequest{
 		Description: "Test",
-		PageRequest: dtos.PageRequest{
-			Page:  1,
-			Limit: 10,
-		},
+		Page:        1,
+		Limit:       10,
 	}
 
 	s.mockExpenseGateway.On("List", ctx, "Test", "", "", "", "", "", mock.Anything).Return(nil, int64(0), fmt.Errorf("gateway error"))

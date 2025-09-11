@@ -3,8 +3,8 @@ package mocks
 import (
 	"context"
 
-	"financial-backend/internal/dtos"
-	"financial-backend/internal/models"
+	"financial-backend/internal/dto"
+	"financial-backend/internal/domain/models"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -14,9 +14,9 @@ type MockExpenseUseCase struct {
 }
 
 // Create mocks the Create method
-func (m *MockExpenseUseCase) Create(ctx context.Context, input *dtos.ExpenseDTO) (*dtos.ExpenseResponse, error) {
+func (m *MockExpenseUseCase) Create(ctx context.Context, input *dto.ExpenseDTO) (*dto.ExpenseResponse, error) {
 	args := m.Called(ctx, input)
-	return args.Get(0).(*dtos.ExpenseResponse), args.Error(1)
+	return args.Get(0).(*dto.ExpenseResponse), args.Error(1)
 }
 
 // Delete mocks the Delete method
@@ -26,19 +26,19 @@ func (m *MockExpenseUseCase) Delete(ctx context.Context, id string) error {
 }
 
 // FindByID mocks the FindByID method
-func (m *MockExpenseUseCase) FindByID(ctx context.Context, id string) (*dtos.ExpenseResponse, error) {
+func (m *MockExpenseUseCase) FindByID(ctx context.Context, id string) (*dto.ExpenseResponse, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*dtos.ExpenseResponse), args.Error(1)
+	return args.Get(0).(*dto.ExpenseResponse), args.Error(1)
 }
 
 // List mocks the List method
-func (m *MockExpenseUseCase) List(ctx context.Context, input *dtos.ListExpensesRequest) (*models.Page[*dtos.ExpenseResponse], error) {
+func (m *MockExpenseUseCase) List(ctx context.Context, input *dto.ListExpensesRequest) (*models.Page[*dto.ExpenseResponse], error) {
 	args := m.Called(ctx, input)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*models.Page[*dtos.ExpenseResponse]), args.Error(1)
+	return args.Get(0).(*models.Page[*dto.ExpenseResponse]), args.Error(1)
 }

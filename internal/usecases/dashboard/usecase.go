@@ -3,14 +3,14 @@ package dashboard
 import (
 	. "context"
 	. "financial-backend/internal/gateways"
-	"financial-backend/internal/views"
+	"financial-backend/internal/dto/response"
 	"golang.org/x/net/context"
 	"sync"
 )
 
 type UseCase interface {
-	GetSummary(ctx Context, month, year int) (views.SummaryView, error)
-	SummaryBudgetUsageByMonthYear(ctx context.Context, month, year int) (data []views.SummaryBudgetUtilization, err error)
+	GetSummary(ctx Context, month, year int) (response.SummaryView, error)
+	SummaryBudgetUsageByMonthYear(ctx context.Context, month, year int) (data []response.SummaryBudgetUtilization, err error)
 }
 
 type useCase struct {
@@ -19,7 +19,7 @@ type useCase struct {
 	budgetMovementGateway BudgetMovementGateway
 }
 
-func (u useCase) GetSummary(ctx Context, month, year int) (views.SummaryView, error) {
+func (u useCase) GetSummary(ctx Context, month, year int) (response.SummaryView, error) {
 	var wg sync.WaitGroup
 	var income, expense float64
 	var incomeErr, expenseErr error
@@ -43,20 +43,20 @@ func (u useCase) GetSummary(ctx Context, month, year int) (views.SummaryView, er
 
 	// Verifica se houve erro em qualquer uma das chamadas
 	if incomeErr != nil {
-		return views.SummaryView{}, incomeErr
+		return response.SummaryView{}, incomeErr
 	}
 	if expenseErr != nil {
-		return views.SummaryView{}, expenseErr
+		return response.SummaryView{}, expenseErr
 	}
 
 	// Retorna o resumo com os valores de renda, despesa e restante
-	return views.SummaryView{
+	return response.SummaryView{
 		TotalIncome:    income,
 		TotalExpense:   expense,
 		TotalRemaining: income - expense,
 	}, nil
 }
-func (u *useCase) SummaryBudgetUsageByMonthYear(ctx context.Context, month, year int) (data []views.SummaryBudgetUtilization, err error) {
+func (u *useCase) SummaryBudgetUsageByMonthYear(ctx context.Context, month, year int) (data []response.SummaryBudgetUtilization, err error) {
 	data, err = u.budgetMovementGateway.SummaryBudgetUsageByMonthYear(ctx, month, year)
 	return
 }

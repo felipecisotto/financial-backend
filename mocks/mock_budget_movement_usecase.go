@@ -3,8 +3,8 @@ package mocks
 import (
 	"context"
 
-	"financial-backend/internal/dtos"
-	"financial-backend/internal/models"
+	"financial-backend/internal/dto"
+	"financial-backend/internal/domain/models"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -19,15 +19,15 @@ func (m *MockBudgetMovementUseCase) FindByID(ctx context.Context, id string) {
 }
 
 // Create mocks the Create method
-func (m *MockBudgetMovementUseCase) Create(ctx context.Context, request dtos.BudgetMovementRequest) (dtos.BudgetMovementResponse, error) {
+func (m *MockBudgetMovementUseCase) Create(ctx context.Context, request dto.BudgetMovementRequest) (dto.BudgetMovementResponse, error) {
 	args := m.Called(ctx, request)
-	return args.Get(0).(dtos.BudgetMovementResponse), args.Error(1)
+	return args.Get(0).(dto.BudgetMovementResponse), args.Error(1)
 }
 
 // Find mocks the Find method
-func (m *MockBudgetMovementUseCase) Find(ctx context.Context, params dtos.BudgetMovementParams) (models.Page[dtos.BudgetMovementResponse], error) {
+func (m *MockBudgetMovementUseCase) Find(ctx context.Context, params dto.BudgetMovementParams) (models.Page[dto.BudgetMovementResponse], error) {
 	args := m.Called(ctx, params)
-	return args.Get(0).(models.Page[dtos.BudgetMovementResponse]), args.Error(1)
+	return args.Get(0).(models.Page[dto.BudgetMovementResponse]), args.Error(1)
 }
 
 // CreateExpenseMovement mocks the CreateExpenseMovement method

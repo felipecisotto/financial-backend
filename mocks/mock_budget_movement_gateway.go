@@ -3,8 +3,8 @@ package mocks
 import (
 	"context"
 
-	"financial-backend/internal/models"
-	"financial-backend/internal/views"
+	"financial-backend/internal/domain/models"
+	"financial-backend/internal/dto/response"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -44,10 +44,10 @@ func (m *MockBudgetMovementGateway) GetByID(ctx context.Context, id string) (mod
 }
 
 // SummaryBudgetUsageByMonthYear mocks the SummaryBudgetUsageByMonthYear method
-func (m *MockBudgetMovementGateway) SummaryBudgetUsageByMonthYear(ctx context.Context, month, year int) ([]views.SummaryBudgetUtilization, error) {
+func (m *MockBudgetMovementGateway) SummaryBudgetUsageByMonthYear(ctx context.Context, month, year int) ([]response.SummaryBudgetUtilization, error) {
 	args := m.Called(ctx, month, year)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]views.SummaryBudgetUtilization), args.Error(1)
+	return args.Get(0).([]response.SummaryBudgetUtilization), args.Error(1)
 }

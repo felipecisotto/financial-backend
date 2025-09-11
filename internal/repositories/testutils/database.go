@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"financial-backend/internal/entities"
+	"financial-backend/internal/domain/entities"
 
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"

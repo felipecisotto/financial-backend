@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"financial-backend/internal/dtos"
-	"financial-backend/internal/models"
+	"financial-backend/internal/dto"
+	"financial-backend/internal/domain/models"
 	"financial-backend/mocks"
 
 	"github.com/gin-gonic/gin"
@@ -42,7 +42,7 @@ func (s *BudgetMovementControllerTestSuite) TearDownTest() {
 }
 
 func (s *BudgetMovementControllerTestSuite) TestCreate_Success() {
-	createReq := dtos.BudgetMovementRequest{
+	createReq := dto.BudgetMovementRequest{
 		BudgetId: "budget-id",
 		Origin:   "MANUAL",
 		Month:    1,
@@ -51,21 +51,21 @@ func (s *BudgetMovementControllerTestSuite) TestCreate_Success() {
 		Amount:   100,
 	}
 
-	expectedResponse := dtos.BudgetMovementResponse{
+	expectedResponse := dto.BudgetMovementResponse{
 		ID:     "movement-id",
 		Origin: "MANUAL",
 		Month:  1,
 		Year:   2024,
 		Type:   "DEBIT",
 		Amount: 100,
-		Budget: dtos.BudgetResponse{
+		Budget: dto.BudgetResponse{
 			ID:          "budget-id",
 			Description: "Test Budget",
 		},
 		CreatedAt: time.Now(),
 	}
 
-	s.mockUseCase.On("Create", mock.Anything, mock.MatchedBy(func(req dtos.BudgetMovementRequest) bool {
+	s.mockUseCase.On("Create", mock.Anything, mock.MatchedBy(func(req dto.BudgetMovementRequest) bool {
 		return req.BudgetId == "budget-id" && req.Amount == 100
 	})).Return(expectedResponse, nil)
 
@@ -78,7 +78,7 @@ func (s *BudgetMovementControllerTestSuite) TestCreate_Success() {
 
 	assert.Equal(s.T(), http.StatusCreated, w.Code)
 	
-	var response dtos.BudgetMovementResponse
+	var response dto.BudgetMovementResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), expectedResponse.ID, response.ID)
@@ -98,13 +98,15 @@ func (s *BudgetMovementControllerTestSuite) TestCreate_InvalidJSON() {
 }
 
 func (s *BudgetMovementControllerTestSuite) TestCreate_UseCaseError() {
-	createReq := dtos.BudgetMovementRequest{
+	createReq := dto.BudgetMovementRequest{
 		BudgetId: "budget-id",
 		Origin:   "MANUAL",
 		Amount:   100,
 	}
 
-	s.mockUseCase.On("Create", mock.Anything, mock.AnythingOfType("dtos.BudgetMovementRequest")).Return(dtos.BudgetMovementResponse{}, fmt.Errorf("create error"))
+	s.mockUseCase.On("Create", mock.Anything, mock.MatchedBy(func(req dto.BudgetMovementRequest) bool {
+		return req.BudgetId == "budget-id" && req.Origin == "MANUAL" && req.Amount == 100
+	})).Return(dto.BudgetMovementResponse{}, fmt.Errorf("create error"))
 
 	body, _ := json.Marshal(createReq)
 	req := httptest.NewRequest(http.MethodPost, "/api/movements", bytes.NewBuffer(body))
@@ -117,7 +119,7 @@ func (s *BudgetMovementControllerTestSuite) TestCreate_UseCaseError() {
 }
 
 func (s *BudgetMovementControllerTestSuite) TestFind_Success() {
-	expectedMovements := []dtos.BudgetMovementResponse{
+	expectedMovements := []dto.BudgetMovementResponse{
 		{
 			ID:     "movement-1",
 			Origin: "EXPENSE",
@@ -134,14 +136,14 @@ func (s *BudgetMovementControllerTestSuite) TestFind_Success() {
 		},
 	}
 
-	expectedPage := models.Page[dtos.BudgetMovementResponse]{
+	expectedPage := models.Page[dto.BudgetMovementResponse]{
 		Page:       1,
 		Limit:      10,
 		TotalPages: 1,
 		Results:    expectedMovements,
 	}
 
-	s.mockUseCase.On("Find", mock.Anything, mock.MatchedBy(func(params dtos.BudgetMovementParams) bool {
+	s.mockUseCase.On("Find", mock.Anything, mock.MatchedBy(func(params dto.BudgetMovementParams) bool {
 		return params.Month == 1 && params.Year == 2024
 	})).Return(expectedPage, nil)
 
@@ -152,7 +154,7 @@ func (s *BudgetMovementControllerTestSuite) TestFind_Success() {
 
 	assert.Equal(s.T(), http.StatusOK, w.Code)
 	
-	var response models.Page[dtos.BudgetMovementResponse]
+	var response models.Page[dto.BudgetMovementResponse]
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), int64(1), response.Page)
@@ -170,7 +172,9 @@ func (s *BudgetMovementControllerTestSuite) TestFind_InvalidQueryParams() {
 }
 
 func (s *BudgetMovementControllerTestSuite) TestFind_UseCaseError() {
-	s.mockUseCase.On("Find", mock.Anything, mock.AnythingOfType("dtos.BudgetMovementParams")).Return(models.Page[dtos.BudgetMovementResponse]{}, fmt.Errorf("find error"))
+	s.mockUseCase.On("Find", mock.Anything, mock.MatchedBy(func(params dto.BudgetMovementParams) bool {
+		return true // Accept any params for this error test
+	})).Return(models.Page[dto.BudgetMovementResponse]{}, fmt.Errorf("find error"))
 
 	req := httptest.NewRequest(http.MethodGet, "/api/movements", nil)
 	w := httptest.NewRecorder()

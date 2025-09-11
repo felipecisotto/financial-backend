@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"financial-backend/internal/dtos"
-	"financial-backend/internal/models"
+	"financial-backend/internal/dto"
+	"financial-backend/internal/domain/models"
 	"financial-backend/mocks"
 
 	"github.com/stretchr/testify/assert"
@@ -41,7 +41,7 @@ func (s *BudgetMovementUseCaseTestSuite) TearDownTest() {
 }
 
 func (s *BudgetMovementUseCaseTestSuite) TestCreate_Success() {
-	request := dtos.BudgetMovementRequest{
+	request := dto.BudgetMovementRequest{
 		BudgetId: "budget-id",
 		Origin:   "MANUAL",
 		Month:    1,
@@ -51,20 +51,6 @@ func (s *BudgetMovementUseCaseTestSuite) TestCreate_Success() {
 	}
 
 	ctx := context.Background()
-
-	expectedResponse := dtos.BudgetMovementResponse{
-		ID:     "movement-id",
-		Origin: "MANUAL",
-		Month:  1,
-		Year:   2024,
-		Type:   "DEBIT",
-		Amount: 100,
-		Budget: dtos.BudgetResponse{
-			ID:          "budget-id",
-			Description: "Test Budget",
-		},
-		CreatedAt: time.Now(),
-	}
 
 	// Mock the gateway call to succeed
 	s.mockBudgetMovementGateway.On("Create", ctx, mock.Anything).Return(nil)
@@ -81,7 +67,7 @@ func (s *BudgetMovementUseCaseTestSuite) TestCreate_Success() {
 }
 
 func (s *BudgetMovementUseCaseTestSuite) TestCreate_GatewayError() {
-	request := dtos.BudgetMovementRequest{
+	request := dto.BudgetMovementRequest{
 		BudgetId: "budget-id",
 		Origin:   "MANUAL",
 		Month:    1,
@@ -98,42 +84,24 @@ func (s *BudgetMovementUseCaseTestSuite) TestCreate_GatewayError() {
 	result, err := s.useCase.Create(ctx, request)
 
 	assert.Error(s.T(), err)
-	assert.Equal(s.T(), dtos.BudgetMovementResponse{}, result)
+	assert.Equal(s.T(), dto.BudgetMovementResponse{}, result)
 }
 
 func (s *BudgetMovementUseCaseTestSuite) TestFind_Success() {
-	params := dtos.BudgetMovementParams{
+	params := dto.BudgetMovementParams{
 		BudgetId:     "budget-id",
 		MovementType: "DEBIT",
 		Origin:       "EXPENSE",
 		Month:        1,
 		Year:         2024,
-		PageRequest: dtos.PageRequest{
-			Page:  1,
-			Limit: 10,
-		},
+		Page:         1,
+		Limit:        10,
 	}
 
 	ctx := context.Background()
 
 	// Create mock budget movements
 	mockMovements := []models.BudgetMovement{}
-
-	expectedPage := models.Page[dtos.BudgetMovementResponse]{
-		Page:       1,
-		Limit:      10,
-		TotalPages: 1,
-		Results: []dtos.BudgetMovementResponse{
-			{
-				ID:     "movement-1",
-				Origin: "EXPENSE",
-				Month:  1,
-				Year:   2024,
-				Type:   "DEBIT",
-				Amount: 150,
-			},
-		},
-	}
 
 	s.mockBudgetMovementGateway.On("List", ctx, "budget-id", "DEBIT", "EXPENSE", 1, 2024, mock.MatchedBy(func(page models.PageRequest) bool {
 		return page.Page == 1 && page.Limit == 10
@@ -147,11 +115,9 @@ func (s *BudgetMovementUseCaseTestSuite) TestFind_Success() {
 }
 
 func (s *BudgetMovementUseCaseTestSuite) TestFind_GatewayError() {
-	params := dtos.BudgetMovementParams{
-		PageRequest: dtos.PageRequest{
-			Page:  1,
-			Limit: 10,
-		},
+	params := dto.BudgetMovementParams{
+		Page:  1,
+		Limit: 10,
 	}
 
 	ctx := context.Background()
@@ -161,17 +127,18 @@ func (s *BudgetMovementUseCaseTestSuite) TestFind_GatewayError() {
 	result, err := s.useCase.Find(ctx, params)
 
 	assert.Error(s.T(), err)
-	assert.Equal(s.T(), models.Page[dtos.BudgetMovementResponse]{}, result)
+	assert.Equal(s.T(), models.Page[dto.BudgetMovementResponse]{}, result)
 }
 
 func (s *BudgetMovementUseCaseTestSuite) TestCreateExpenseMovement_Success() {
-	// Create a mock expense
+	// Create a mock expense with budget ID
+	budgetId := "budget-id"
 	mockExpense, _ := models.NewExpense(
 		"expense-id",
 		"Test Expense",
 		100.0,
 		"VARIABLE",
-		nil,
+		&budgetId,
 		nil,
 		"PIX",
 		&[]int{1}[0],
@@ -183,6 +150,9 @@ func (s *BudgetMovementUseCaseTestSuite) TestCreateExpenseMovement_Success() {
 
 	ctx := context.Background()
 
+	// Mock budget gateway Get call since expense doesn't have budget loaded
+	mockBudget := models.NewBudget("budget-id", 1000.0, "Test Budget", nil)
+	s.mockBudgetGateway.On("Get", ctx, budgetId).Return(mockBudget, nil)
 	s.mockBudgetMovementGateway.On("Create", ctx, mock.Anything).Return(nil)
 
 	err := s.useCase.CreateExpenseMovement(ctx, mockExpense)
@@ -191,13 +161,14 @@ func (s *BudgetMovementUseCaseTestSuite) TestCreateExpenseMovement_Success() {
 }
 
 func (s *BudgetMovementUseCaseTestSuite) TestCreateExpenseMovement_GatewayError() {
-	// Create a mock expense
+	// Create a mock expense with budget ID
+	budgetId := "budget-id"
 	mockExpense, _ := models.NewExpense(
 		"expense-id",
 		"Test Expense",
 		100.0,
 		"VARIABLE",
-		nil,
+		&budgetId,
 		nil,
 		"PIX",
 		&[]int{1}[0],
@@ -209,6 +180,9 @@ func (s *BudgetMovementUseCaseTestSuite) TestCreateExpenseMovement_GatewayError(
 
 	ctx := context.Background()
 
+	// Mock budget gateway Get call since expense doesn't have budget loaded
+	mockBudget := models.NewBudget("budget-id", 1000.0, "Test Budget", nil)
+	s.mockBudgetGateway.On("Get", ctx, budgetId).Return(mockBudget, nil)
 	s.mockBudgetMovementGateway.On("Create", ctx, mock.Anything).Return(fmt.Errorf("create movement error"))
 
 	err := s.useCase.CreateExpenseMovement(ctx, mockExpense)
@@ -222,6 +196,13 @@ func (s *BudgetMovementUseCaseTestSuite) TestCreateRecurrencyMovements_Success()
 	// Mock getting expenses without movement
 	mockExpenses := []models.Expense{}
 	s.mockExpenseGateway.On("GetExpensesWithoutMovementInMonth", ctx).Return(mockExpenses, nil)
+	
+	// Mock getting budgets without movement
+	mockBudgets := []models.Budget{}
+	s.mockBudgetGateway.On("GetBudgetsWithoutMovement", ctx).Return(mockBudgets, nil)
+	
+	// Mock creating all movements (empty list)
+	s.mockBudgetMovementGateway.On("CreateAll", ctx, mock.Anything).Return(nil)
 
 	err := s.useCase.CreateRecurrencyMovements(ctx)
 
@@ -231,25 +212,35 @@ func (s *BudgetMovementUseCaseTestSuite) TestCreateRecurrencyMovements_Success()
 func (s *BudgetMovementUseCaseTestSuite) TestCreateRecurrencyMovements_WithExpenses() {
 	ctx := context.Background()
 
-	// Create mock expenses
+	// Create mock budget first
+	mockBudget := models.NewBudget("budget-1", 1000.0, "Test Budget", nil)
+	budgetId := "budget-1"
+	recurrency := string(models.ExpenseRecurrencyMonthly)
+	
+	// Create mock expenses with proper budget and recurrency
 	expense1, _ := models.NewExpense(
 		"expense-1",
 		"Recurring Expense 1",
 		100.0,
-		"VARIABLE",
-		nil,
-		nil,
+		"RECURRING",
+		&budgetId,
+		&recurrency,
 		"PIX",
 		&[]int{1}[0],
 		15,
 		time.Now(),
 		nil,
-		nil,
+		&mockBudget,
 	)
 
 	mockExpenses := []models.Expense{expense1}
 
 	s.mockExpenseGateway.On("GetExpensesWithoutMovementInMonth", ctx).Return(mockExpenses, nil)
+	
+	// Mock getting budgets without movement
+	mockBudgets := []models.Budget{}
+	s.mockBudgetGateway.On("GetBudgetsWithoutMovement", ctx).Return(mockBudgets, nil)
+	
 	s.mockBudgetMovementGateway.On("CreateAll", ctx, mock.Anything).Return(nil)
 
 	err := s.useCase.CreateRecurrencyMovements(ctx)

@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"financial-backend/internal/views"
+	"financial-backend/internal/dto/response"
 	"financial-backend/mocks"
 
 	"github.com/gin-gonic/gin"
@@ -39,7 +39,7 @@ func (s *DashboardControllerTestSuite) TearDownTest() {
 }
 
 func (s *DashboardControllerTestSuite) TestGetSummary_Success() {
-	expectedSummary := views.SummaryView{
+	expectedSummary := response.SummaryView{
 		TotalIncome:    5000.0,
 		TotalExpense:   3000.0,
 		TotalRemaining: 2000.0,
@@ -54,7 +54,7 @@ func (s *DashboardControllerTestSuite) TestGetSummary_Success() {
 
 	assert.Equal(s.T(), http.StatusOK, w.Code)
 	
-	var response views.SummaryView
+	var response response.SummaryView
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), expectedSummary.TotalIncome, response.TotalIncome)
@@ -81,7 +81,7 @@ func (s *DashboardControllerTestSuite) TestGetSummary_InvalidParams() {
 }
 
 func (s *DashboardControllerTestSuite) TestGetSummary_UseCaseError() {
-	s.mockUseCase.On("GetSummary", mock.Anything, 1, 2024).Return(views.SummaryView{}, fmt.Errorf("summary error"))
+	s.mockUseCase.On("GetSummary", mock.Anything, 1, 2024).Return(response.SummaryView{}, fmt.Errorf("summary error"))
 
 	req := httptest.NewRequest(http.MethodGet, "/api/dashboard/summary?month=1&year=2024", nil)
 	w := httptest.NewRecorder()
@@ -92,7 +92,7 @@ func (s *DashboardControllerTestSuite) TestGetSummary_UseCaseError() {
 }
 
 func (s *DashboardControllerTestSuite) TestSummaryBudgetUsageByMonthYear_Success() {
-	expectedUtilizations := []views.SummaryBudgetUtilization{
+	expectedUtilizations := []response.SummaryBudgetUtilization{
 		{
 			Description: "Food Budget",
 			Amount:      500.0,
@@ -114,7 +114,7 @@ func (s *DashboardControllerTestSuite) TestSummaryBudgetUsageByMonthYear_Success
 
 	assert.Equal(s.T(), http.StatusOK, w.Code)
 	
-	var response []views.SummaryBudgetUtilization
+	var response []response.SummaryBudgetUtilization
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(s.T(), err)
 	assert.Len(s.T(), response, 2)

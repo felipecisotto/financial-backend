@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"financial-backend/internal/dtos"
-	"financial-backend/internal/models"
+	"financial-backend/internal/dto"
+	"financial-backend/internal/domain/models"
 	"financial-backend/mocks"
 
 	"github.com/gin-gonic/gin"
@@ -42,7 +42,7 @@ func (s *IncomeControllerTestSuite) TearDownTest() {
 }
 
 func (s *IncomeControllerTestSuite) TestCreate_Success() {
-	createReq := &dtos.CreateIncomeRequest{
+	createReq := &dto.CreateIncomeRequest{
 		Description: "Test Income",
 		Amount:      1000.0,
 		Type:        "FIXED",
@@ -50,7 +50,7 @@ func (s *IncomeControllerTestSuite) TestCreate_Success() {
 		StartDate:   time.Now(),
 	}
 
-	expectedResponse := &dtos.IncomeResponse{
+	expectedResponse := &dto.IncomeResponse{
 		ID:          "test-id",
 		Description: "Test Income",
 		Amount:      1000.0,
@@ -61,7 +61,7 @@ func (s *IncomeControllerTestSuite) TestCreate_Success() {
 		UpdatedAt:   time.Now(),
 	}
 
-	s.mockUseCase.On("Create", mock.Anything, mock.MatchedBy(func(dto *dtos.CreateIncomeRequest) bool {
+	s.mockUseCase.On("Create", mock.Anything, mock.MatchedBy(func(dto *dto.CreateIncomeRequest) bool {
 		return dto.Description == "Test Income" && dto.Amount == 1000.0 && dto.Type == "FIXED"
 	})).Return(expectedResponse, nil)
 
@@ -74,7 +74,7 @@ func (s *IncomeControllerTestSuite) TestCreate_Success() {
 
 	assert.Equal(s.T(), http.StatusCreated, w.Code)
 	
-	var response dtos.IncomeResponse
+	var response dto.IncomeResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), expectedResponse.ID, response.ID)
@@ -110,7 +110,7 @@ func (s *IncomeControllerTestSuite) TestCreate_MissingRequiredFields() {
 }
 
 func (s *IncomeControllerTestSuite) TestCreate_UseCaseError() {
-	createReq := &dtos.CreateIncomeRequest{
+	createReq := &dto.CreateIncomeRequest{
 		Description: "Test Income",
 		Amount:      1000.0,
 		Type:        "FIXED",
@@ -118,7 +118,7 @@ func (s *IncomeControllerTestSuite) TestCreate_UseCaseError() {
 		StartDate:   time.Now(),
 	}
 
-	s.mockUseCase.On("Create", mock.Anything, mock.MatchedBy(func(dto *dtos.CreateIncomeRequest) bool {
+	s.mockUseCase.On("Create", mock.Anything, mock.MatchedBy(func(dto *dto.CreateIncomeRequest) bool {
 		return dto.Description == "Test Income" && dto.Amount == 1000.0 && dto.Type == "FIXED"
 	})).Return(nil, fmt.Errorf("create error"))
 
@@ -135,16 +135,16 @@ func (s *IncomeControllerTestSuite) TestCreate_UseCaseError() {
 func (s *IncomeControllerTestSuite) TestUpdate_Success() {
 	incomeID := "test-income-id"
 	amount := 1500.0
-	updateReq := &dtos.UpdateIncomeRequest{
+	updateReq := &dto.UpdateIncomeRequest{
 		Amount: &amount,
 	}
 
-	expectedResponse := &dtos.IncomeResponse{
+	expectedResponse := &dto.IncomeResponse{
 		ID:     incomeID,
 		Amount: 1500.0,
 	}
 
-	s.mockUseCase.On("Update", mock.Anything, incomeID, mock.MatchedBy(func(dto *dtos.UpdateIncomeRequest) bool {
+	s.mockUseCase.On("Update", mock.Anything, incomeID, mock.MatchedBy(func(dto *dto.UpdateIncomeRequest) bool {
 		return dto.Amount != nil && *dto.Amount == 1500.0
 	})).Return(expectedResponse, nil)
 
@@ -157,7 +157,7 @@ func (s *IncomeControllerTestSuite) TestUpdate_Success() {
 
 	assert.Equal(s.T(), http.StatusOK, w.Code)
 	
-	var response dtos.IncomeResponse
+	var response dto.IncomeResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), expectedResponse.ID, response.ID)
@@ -180,11 +180,13 @@ func (s *IncomeControllerTestSuite) TestUpdate_InvalidJSON() {
 func (s *IncomeControllerTestSuite) TestUpdate_UseCaseError() {
 	incomeID := "test-income-id"
 	amount := 1500.0
-	updateReq := &dtos.UpdateIncomeRequest{
+	updateReq := &dto.UpdateIncomeRequest{
 		Amount: &amount,
 	}
 
-	s.mockUseCase.On("Update", mock.Anything, incomeID, mock.AnythingOfType("*dtos.UpdateIncomeRequest")).Return(nil, fmt.Errorf("update error"))
+	s.mockUseCase.On("Update", mock.Anything, incomeID, mock.MatchedBy(func(req *dto.UpdateIncomeRequest) bool {
+		return req.Amount != nil && *req.Amount == 1500.0
+	})).Return(nil, fmt.Errorf("update error"))
 
 	body, _ := json.Marshal(updateReq)
 	req := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/incomes/%s", incomeID), bytes.NewBuffer(body))
@@ -225,7 +227,7 @@ func (s *IncomeControllerTestSuite) TestDelete_UseCaseError() {
 
 func (s *IncomeControllerTestSuite) TestGet_Success() {
 	incomeID := "test-income-id"
-	expectedResponse := &dtos.IncomeResponse{
+	expectedResponse := &dto.IncomeResponse{
 		ID:          incomeID,
 		Description: "Test Income",
 		Amount:      1000.0,
@@ -245,7 +247,7 @@ func (s *IncomeControllerTestSuite) TestGet_Success() {
 
 	assert.Equal(s.T(), http.StatusOK, w.Code)
 	
-	var response dtos.IncomeResponse
+	var response dto.IncomeResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), expectedResponse.ID, response.ID)
@@ -266,7 +268,7 @@ func (s *IncomeControllerTestSuite) TestGet_NotFound() {
 }
 
 func (s *IncomeControllerTestSuite) TestList_Success() {
-	expectedIncomes := []*dtos.IncomeResponse{
+	expectedIncomes := []*dto.IncomeResponse{
 		{
 			ID:          "income-1",
 			Description: "Income 1",
@@ -289,14 +291,14 @@ func (s *IncomeControllerTestSuite) TestList_Success() {
 		},
 	}
 
-	expectedPage := &models.Page[*dtos.IncomeResponse]{
+	expectedPage := &models.Page[*dto.IncomeResponse]{
 		Page:       1,
 		Limit:      10,
 		TotalPages: 1,
 		Results:    expectedIncomes,
 	}
 
-	s.mockUseCase.On("List", mock.Anything, mock.MatchedBy(func(params dtos.ListIncomeParams) bool {
+	s.mockUseCase.On("List", mock.Anything, mock.MatchedBy(func(params dto.ListIncomeParams) bool {
 		return params.Type == "FIXED" && params.Description == "Test"
 	})).Return(expectedPage, nil)
 
@@ -307,7 +309,7 @@ func (s *IncomeControllerTestSuite) TestList_Success() {
 
 	assert.Equal(s.T(), http.StatusOK, w.Code)
 	
-	var response models.Page[*dtos.IncomeResponse]
+	var response models.Page[*dto.IncomeResponse]
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), int64(1), response.Page)
@@ -325,7 +327,9 @@ func (s *IncomeControllerTestSuite) TestList_InvalidQueryParams() {
 }
 
 func (s *IncomeControllerTestSuite) TestList_UseCaseError() {
-	s.mockUseCase.On("List", mock.Anything, mock.AnythingOfType("dtos.ListIncomeParams")).Return(nil, fmt.Errorf("list error"))
+	s.mockUseCase.On("List", mock.Anything, mock.MatchedBy(func(params dto.ListIncomeParams) bool {
+		return true // Accept any params for this error test
+	})).Return(nil, fmt.Errorf("list error"))
 
 	req := httptest.NewRequest(http.MethodGet, "/api/incomes", nil)
 	w := httptest.NewRecorder()

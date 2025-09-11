@@ -3,7 +3,7 @@ package controllers
 import (
 	"net/http"
 
-	"financial-backend/internal/dtos"
+	"financial-backend/internal/dto"
 	"financial-backend/internal/usecases/income"
 
 	"github.com/gin-gonic/gin"
@@ -18,7 +18,7 @@ func NewIncomeController(useCase income.UseCase) *IncomeController {
 }
 
 func (c *IncomeController) Create(ctx *gin.Context) {
-	var req dtos.CreateIncomeRequest
+	var req dto.CreateIncomeRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -35,7 +35,7 @@ func (c *IncomeController) Create(ctx *gin.Context) {
 
 func (c *IncomeController) Update(ctx *gin.Context) {
 	id := ctx.Param("id")
-	var req dtos.UpdateIncomeRequest
+	var req dto.UpdateIncomeRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -72,7 +72,7 @@ func (c *IncomeController) Get(ctx *gin.Context) {
 }
 
 func (c *IncomeController) List(ctx *gin.Context) {
-	var params dtos.ListIncomeParams
+	var params dto.ListIncomeParams
 
 	if err := ctx.ShouldBindQuery(&params); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "parâmetros inválidos"})

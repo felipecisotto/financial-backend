@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"financial-backend/internal/dtos"
-	"financial-backend/internal/models"
+	"financial-backend/internal/dto"
+	"financial-backend/internal/domain/models"
 	"financial-backend/mocks"
 
 	"github.com/gin-gonic/gin"
@@ -42,7 +42,7 @@ func (s *ExpenseControllerTestSuite) TearDownTest() {
 }
 
 func (s *ExpenseControllerTestSuite) TestCreate_Success() {
-	expenseDTO := &dtos.ExpenseDTO{
+	expenseDTO := &dto.ExpenseDTO{
 		Description: "Test Expense",
 		Amount:      150.0,
 		Type:        "VARIABLE",
@@ -51,12 +51,23 @@ func (s *ExpenseControllerTestSuite) TestCreate_Success() {
 		StartDate:   time.Now(),
 	}
 
-	expectedResponse := &dtos.ExpenseResponse{
-		ID:         "test-id",
-		ExpenseDTO: *expenseDTO,
+	expectedResponse := &dto.ExpenseResponse{
+		ID:          "test-id",
+		Description: expenseDTO.Description,
+		Amount:      expenseDTO.Amount,
+		Type:        expenseDTO.Type,
+		Method:      expenseDTO.Method,
+		DueDay:      expenseDTO.DueDay,
+		StartDate:   expenseDTO.StartDate,
+		EndDate:     expenseDTO.EndDate,
+		BudgetID:    expenseDTO.BudgetID,
+		Recurrency:  expenseDTO.Recurrency,
+		Installments: expenseDTO.Installments,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 
-	s.mockUseCase.On("Create", mock.Anything, mock.MatchedBy(func(dto *dtos.ExpenseDTO) bool {
+	s.mockUseCase.On("Create", mock.Anything, mock.MatchedBy(func(dto *dto.ExpenseDTO) bool {
 		return dto.Description == "Test Expense" && dto.Amount == 150.0 && dto.Type == "VARIABLE"
 	})).Return(expectedResponse, nil)
 
@@ -69,7 +80,7 @@ func (s *ExpenseControllerTestSuite) TestCreate_Success() {
 
 	assert.Equal(s.T(), http.StatusCreated, w.Code)
 	
-	var response dtos.ExpenseResponse
+	var response dto.ExpenseResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), expectedResponse.ID, response.ID)
@@ -110,7 +121,7 @@ func (s *ExpenseControllerTestSuite) TestCreate_MissingRequiredFields() {
 }
 
 func (s *ExpenseControllerTestSuite) TestCreate_UseCaseError() {
-	expenseDTO := &dtos.ExpenseDTO{
+	expenseDTO := &dto.ExpenseDTO{
 		Description: "Test Expense",
 		Amount:      150.0,
 		Type:        "VARIABLE",
@@ -119,9 +130,9 @@ func (s *ExpenseControllerTestSuite) TestCreate_UseCaseError() {
 		StartDate:   time.Now(),
 	}
 
-	s.mockUseCase.On("Create", mock.Anything, mock.MatchedBy(func(dto *dtos.ExpenseDTO) bool {
+	s.mockUseCase.On("Create", mock.Anything, mock.MatchedBy(func(dto *dto.ExpenseDTO) bool {
 		return dto.Description == "Test Expense" && dto.Amount == 150.0 && dto.Type == "VARIABLE"
-	})).Return((*dtos.ExpenseResponse)(nil), fmt.Errorf("use case error"))
+	})).Return((*dto.ExpenseResponse)(nil), fmt.Errorf("use case error"))
 
 	body, _ := json.Marshal(expenseDTO)
 	req := httptest.NewRequest(http.MethodPost, "/api/expenses", bytes.NewBuffer(body))
@@ -172,16 +183,16 @@ func (s *ExpenseControllerTestSuite) TestDelete_UseCaseError() {
 
 func (s *ExpenseControllerTestSuite) TestGetByID_Success() {
 	expenseID := "test-expense-id"
-	expectedResponse := &dtos.ExpenseResponse{
-		ID: expenseID,
-		ExpenseDTO: dtos.ExpenseDTO{
-			Description: "Test Expense",
-			Amount:      150.0,
-			Type:        "VARIABLE",
-			Method:      "CREDIT_CARD",
-			DueDay:      15,
-			StartDate:   time.Now(),
-		},
+	expectedResponse := &dto.ExpenseResponse{
+		ID:          expenseID,
+		Description: "Test Expense",
+		Amount:      150.0,
+		Type:        "VARIABLE",
+		Method:      "CREDIT_CARD",
+		DueDay:      15,
+		StartDate:   time.Now(),
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 
 	s.mockUseCase.On("FindByID", mock.Anything, expenseID).Return(expectedResponse, nil)
@@ -193,7 +204,7 @@ func (s *ExpenseControllerTestSuite) TestGetByID_Success() {
 
 	assert.Equal(s.T(), http.StatusOK, w.Code)
 	
-	var response dtos.ExpenseResponse
+	var response dto.ExpenseResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), expectedResponse.ID, response.ID)
@@ -219,39 +230,39 @@ func (s *ExpenseControllerTestSuite) TestGetByID_NotFound() {
 }
 
 func (s *ExpenseControllerTestSuite) TestList_Success() {
-	expectedExpenses := []*dtos.ExpenseResponse{
+	expectedExpenses := []*dto.ExpenseResponse{
 		{
-			ID: "expense-1",
-			ExpenseDTO: dtos.ExpenseDTO{
-				Description: "Expense 1",
-				Amount:      100.0,
-				Type:        "VARIABLE",
-				Method:      "CREDIT_CARD",
-				DueDay:      15,
-				StartDate:   time.Now(),
-			},
+			ID:          "expense-1",
+			Description: "Expense 1",
+			Amount:      100.0,
+			Type:        "VARIABLE",
+			Method:      "CREDIT_CARD",
+			DueDay:      15,
+			StartDate:   time.Now(),
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
 		},
 		{
-			ID: "expense-2",
-			ExpenseDTO: dtos.ExpenseDTO{
-				Description: "Expense 2",
-				Amount:      200.0,
-				Type:        "VARIABLE",
-				Method:      "DEBIT_CARD",
-				DueDay:      20,
-				StartDate:   time.Now(),
-			},
+			ID:          "expense-2",
+			Description: "Expense 2",
+			Amount:      200.0,
+			Type:        "VARIABLE",
+			Method:      "DEBIT_CARD",
+			DueDay:      20,
+			StartDate:   time.Now(),
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
 		},
 	}
 
-	expectedPage := &models.Page[*dtos.ExpenseResponse]{
+	expectedPage := &models.Page[*dto.ExpenseResponse]{
 		Page:       1,
 		Limit:      10,
 		TotalPages: 1,
 		Results:    expectedExpenses,
 	}
 
-	s.mockUseCase.On("List", mock.Anything, mock.MatchedBy(func(req *dtos.ListExpensesRequest) bool {
+	s.mockUseCase.On("List", mock.Anything, mock.MatchedBy(func(req *dto.ListExpensesRequest) bool {
 		return req.Description == "Test" && req.Type == "VARIABLE"
 	})).Return(expectedPage, nil)
 
@@ -262,7 +273,7 @@ func (s *ExpenseControllerTestSuite) TestList_Success() {
 
 	assert.Equal(s.T(), http.StatusOK, w.Code)
 	
-	var response models.Page[*dtos.ExpenseResponse]
+	var response models.Page[*dto.ExpenseResponse]
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), int64(1), response.Page)
@@ -280,7 +291,9 @@ func (s *ExpenseControllerTestSuite) TestList_InvalidQueryParams() {
 }
 
 func (s *ExpenseControllerTestSuite) TestList_UseCaseError() {
-	s.mockUseCase.On("List", mock.Anything, mock.AnythingOfType("*dtos.ListExpensesRequest")).Return(nil, fmt.Errorf("list error"))
+	s.mockUseCase.On("List", mock.Anything, mock.MatchedBy(func(req *dto.ListExpensesRequest) bool {
+		return true // Accept any request for this error test
+	})).Return(nil, fmt.Errorf("list error"))
 
 	req := httptest.NewRequest(http.MethodGet, "/api/expenses", nil)
 	w := httptest.NewRecorder()

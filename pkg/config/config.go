@@ -1,7 +1,7 @@
 package config
 
 import (
-	"financial-backend/internal/entities"
+	"financial-backend/internal/domain/entities"
 	"fmt"
 	"log"
 	"os"

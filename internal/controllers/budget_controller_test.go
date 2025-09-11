@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"financial-backend/internal/dtos"
-	"financial-backend/internal/models"
+	"financial-backend/internal/dto"
+	"financial-backend/internal/domain/models"
 	"financial-backend/mocks"
 
 	"github.com/gin-gonic/gin"
@@ -42,12 +42,12 @@ func (s *BudgetControllerTestSuite) TearDownTest() {
 }
 
 func (s *BudgetControllerTestSuite) TestCreate_Success() {
-	createReq := dtos.CreateBudgetRequest{
+	createReq := dto.CreateBudgetRequest{
 		Description: "Test Budget",
 		Amount:      1000.0,
 	}
 
-	expectedResponse := dtos.BudgetResponse{
+	expectedResponse := dto.BudgetResponse{
 		ID:          "test-id",
 		Description: "Test Budget",
 		Amount:      1000.0,
@@ -56,7 +56,7 @@ func (s *BudgetControllerTestSuite) TestCreate_Success() {
 		UpdatedAt:   time.Now(),
 	}
 
-	s.mockUseCase.On("Create", mock.Anything, mock.MatchedBy(func(dto dtos.CreateBudgetRequest) bool {
+	s.mockUseCase.On("Create", mock.Anything, mock.MatchedBy(func(dto dto.CreateBudgetRequest) bool {
 		return dto.Description == "Test Budget" && dto.Amount == 1000.0
 	})).Return(expectedResponse, nil)
 
@@ -69,7 +69,7 @@ func (s *BudgetControllerTestSuite) TestCreate_Success() {
 
 	assert.Equal(s.T(), http.StatusCreated, w.Code)
 	
-	var response dtos.BudgetResponse
+	var response dto.BudgetResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), expectedResponse.ID, response.ID)
@@ -105,12 +105,14 @@ func (s *BudgetControllerTestSuite) TestCreate_MissingRequiredFields() {
 }
 
 func (s *BudgetControllerTestSuite) TestCreate_UseCaseError() {
-	createReq := dtos.CreateBudgetRequest{
+	createReq := dto.CreateBudgetRequest{
 		Description: "Test Budget",
 		Amount:      1000.0,
 	}
 
-	s.mockUseCase.On("Create", mock.Anything, mock.AnythingOfType("dtos.CreateBudgetRequest")).Return(dtos.BudgetResponse{}, fmt.Errorf("create error"))
+	s.mockUseCase.On("Create", mock.Anything, mock.MatchedBy(func(req dto.CreateBudgetRequest) bool {
+		return req.Description == "Test Budget" && req.Amount == 1000.0
+	})).Return(dto.BudgetResponse{}, fmt.Errorf("create error"))
 
 	body, _ := json.Marshal(createReq)
 	req := httptest.NewRequest(http.MethodPost, "/api/budgets", bytes.NewBuffer(body))
@@ -125,16 +127,18 @@ func (s *BudgetControllerTestSuite) TestCreate_UseCaseError() {
 func (s *BudgetControllerTestSuite) TestUpdate_Success() {
 	budgetID := "test-budget-id"
 	endDate := time.Now().AddDate(0, 1, 0) // 1 month from now
-	updateReq := dtos.UpdateBudgetRequest{
+	updateReq := dto.UpdateBudgetRequest{
 		EndDate: endDate,
 	}
 
-	expectedResponse := dtos.BudgetResponse{
+	expectedResponse := dto.BudgetResponse{
 		ID:      budgetID,
 		EndDate: &endDate,
 	}
 
-	s.mockUseCase.On("Update", mock.Anything, budgetID, mock.AnythingOfType("*dtos.UpdateBudgetRequest")).Return(expectedResponse, nil)
+	s.mockUseCase.On("Update", mock.Anything, budgetID, mock.MatchedBy(func(req *dto.UpdateBudgetRequest) bool {
+		return req.EndDate.Equal(endDate)
+	})).Return(expectedResponse, nil)
 
 	body, _ := json.Marshal(updateReq)
 	req := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/budgets/%s", budgetID), bytes.NewBuffer(body))
@@ -188,7 +192,7 @@ func (s *BudgetControllerTestSuite) TestDelete_UseCaseError() {
 
 func (s *BudgetControllerTestSuite) TestGet_Success() {
 	budgetID := "test-budget-id"
-	expectedResponse := dtos.BudgetResponse{
+	expectedResponse := dto.BudgetResponse{
 		ID:          budgetID,
 		Description: "Test Budget",
 		Amount:      1000.0,
@@ -206,7 +210,7 @@ func (s *BudgetControllerTestSuite) TestGet_Success() {
 
 	assert.Equal(s.T(), http.StatusOK, w.Code)
 	
-	var response dtos.BudgetResponse
+	var response dto.BudgetResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), expectedResponse.ID, response.ID)
@@ -216,7 +220,7 @@ func (s *BudgetControllerTestSuite) TestGet_Success() {
 func (s *BudgetControllerTestSuite) TestGet_NotFound() {
 	budgetID := "non-existent-id"
 	
-	s.mockUseCase.On("Get", mock.Anything, budgetID).Return(dtos.BudgetResponse{}, fmt.Errorf("budget not found"))
+	s.mockUseCase.On("Get", mock.Anything, budgetID).Return(dto.BudgetResponse{}, fmt.Errorf("budget not found"))
 
 	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/budgets/%s", budgetID), nil)
 	w := httptest.NewRecorder()
@@ -227,7 +231,7 @@ func (s *BudgetControllerTestSuite) TestGet_NotFound() {
 }
 
 func (s *BudgetControllerTestSuite) TestList_Success() {
-	expectedBudgets := []dtos.BudgetResponse{
+	expectedBudgets := []dto.BudgetResponse{
 		{
 			ID:          "budget-1",
 			Description: "Budget 1",
@@ -246,14 +250,14 @@ func (s *BudgetControllerTestSuite) TestList_Success() {
 		},
 	}
 
-	expectedPage := &models.Page[dtos.BudgetResponse]{
+	expectedPage := &models.Page[dto.BudgetResponse]{
 		Page:       1,
 		Limit:      10,
 		TotalPages: 1,
 		Results:    expectedBudgets,
 	}
 
-	s.mockUseCase.On("List", mock.Anything, mock.MatchedBy(func(params dtos.BudgetListParams) bool {
+	s.mockUseCase.On("List", mock.Anything, mock.MatchedBy(func(params dto.BudgetListParams) bool {
 		return params.Description == "Test" && params.Status == "ACTIVE"
 	})).Return(expectedPage, nil)
 
@@ -264,7 +268,7 @@ func (s *BudgetControllerTestSuite) TestList_Success() {
 
 	assert.Equal(s.T(), http.StatusOK, w.Code)
 	
-	var response models.Page[dtos.BudgetResponse]
+	var response models.Page[dto.BudgetResponse]
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), int64(1), response.Page)
@@ -282,7 +286,9 @@ func (s *BudgetControllerTestSuite) TestList_InvalidQueryParams() {
 }
 
 func (s *BudgetControllerTestSuite) TestList_UseCaseError() {
-	s.mockUseCase.On("List", mock.Anything, mock.AnythingOfType("dtos.BudgetListParams")).Return(nil, fmt.Errorf("list error"))
+	s.mockUseCase.On("List", mock.Anything, mock.MatchedBy(func(params dto.BudgetListParams) bool {
+		return true // Accept any params for this error test
+	})).Return(nil, fmt.Errorf("list error"))
 
 	req := httptest.NewRequest(http.MethodGet, "/api/budgets", nil)
 	w := httptest.NewRecorder()

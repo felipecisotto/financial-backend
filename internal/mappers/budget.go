@@ -1,9 +1,10 @@
 package mappers
 
 import (
-	"financial-backend/internal/dtos"
-	"financial-backend/internal/entities"
-	"financial-backend/internal/models"
+	"financial-backend/internal/dto/request"
+	"financial-backend/internal/dto/response"
+	"financial-backend/internal/domain/entities"
+	"financial-backend/internal/domain/models"
 
 	"github.com/google/uuid"
 )
@@ -28,7 +29,7 @@ func ToBudgetEntity(budget models.Budget) *entities.Budget {
 	}
 }
 
-func FromDTOToBudgetModel(dto dtos.CreateBudgetRequest) models.Budget {
+func FromDTOToBudgetModel(dto request.CreateBudgetRequest) models.Budget {
 	return models.NewBudget(
 		uuid.New().String(),
 		dto.Amount,
@@ -37,8 +38,8 @@ func FromDTOToBudgetModel(dto dtos.CreateBudgetRequest) models.Budget {
 	)
 }
 
-func ToBudgetResponse(budget models.Budget) dtos.BudgetResponse {
-	return dtos.BudgetResponse{
+func ToBudgetResponse(budget models.Budget) response.BudgetResponse {
+	return response.BudgetResponse{
 		ID:          budget.ID(),
 		Amount:      budget.Amount(),
 		Description: budget.Description(),

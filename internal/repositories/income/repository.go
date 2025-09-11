@@ -2,7 +2,7 @@ package income
 
 import (
 	. "context"
-	. "financial-backend/internal/entities"
+	. "financial-backend/internal/domain/entities"
 )
 
 // Repository defines the interface for income repository operations

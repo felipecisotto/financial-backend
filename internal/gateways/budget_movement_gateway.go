@@ -2,11 +2,11 @@ package gateways
 
 import (
 	"context"
-	"financial-backend/internal/entities"
+	"financial-backend/internal/domain/entities"
 	"financial-backend/internal/mappers"
-	"financial-backend/internal/models"
+	"financial-backend/internal/domain/models"
 	budgetmovementRepository "financial-backend/internal/repositories/budget_movement"
-	. "financial-backend/internal/views"
+	. "financial-backend/internal/dto/response"
 )
 
 type BudgetMovementGateway interface {

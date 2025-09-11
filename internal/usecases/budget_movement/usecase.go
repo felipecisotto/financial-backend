@@ -2,15 +2,15 @@ package budgetmovement
 
 import (
 	"context"
-	"financial-backend/internal/dtos"
+	"financial-backend/internal/dto"
 	"financial-backend/internal/gateways"
-	"financial-backend/internal/models"
+	"financial-backend/internal/domain/models"
 )
 
 type UseCase interface {
 	FindByID(ctx context.Context, id string)
-	Create(ctx context.Context, request dtos.BudgetMovementRequest) (dtos.BudgetMovementResponse, error)
-	Find(ctx context.Context, params dtos.BudgetMovementParams) (models.Page[dtos.BudgetMovementResponse], error)
+	Create(ctx context.Context, request dto.BudgetMovementRequest) (dto.BudgetMovementResponse, error)
+	Find(ctx context.Context, params dto.BudgetMovementParams) (models.Page[dto.BudgetMovementResponse], error)
 	CreateExpenseMovement(ctx context.Context, expense models.Expense) error
 	CreateRecurrencyMovements(ctx context.Context) error
 }

@@ -3,7 +3,7 @@ package mocks
 import (
 	"context"
 
-	"financial-backend/internal/models"
+	"financial-backend/internal/domain/models"
 	"github.com/stretchr/testify/mock"
 )
 
