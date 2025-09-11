@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"math"
 
-	"financial-backend/internal/dtos"
+	"financial-backend/internal/domain/models"
+	"financial-backend/internal/dto"
 	"financial-backend/internal/gateways"
-	"financial-backend/internal/models"
 	"financial-backend/pkg/config"
 )
 
@@ -19,10 +19,10 @@ type useCase struct {
 }
 
 type UseCase interface {
-	Create(ctx context.Context, input *dtos.ExpenseDTO) (*dtos.ExpenseResponse, error)
+	Create(ctx context.Context, input *dto.ExpenseDTO) (*dto.ExpenseResponse, error)
 	Delete(ctx context.Context, id string) error
-	FindByID(ctx context.Context, id string) (*dtos.ExpenseResponse, error)
-	List(ctx context.Context, input *dtos.ListExpensesRequest) (*models.Page[*dtos.ExpenseResponse], error)
+	FindByID(ctx context.Context, id string) (*dto.ExpenseResponse, error)
+	List(ctx context.Context, input *dto.ListExpensesRequest) (*models.Page[*dto.ExpenseResponse], error)
 }
 
 func NewUseCase(expenseGateway gateways.ExpenseGateway, budgetGateway gateways.BudgetGateway, eventPublisher config.Publisher, defaultDueDate int) UseCase {
@@ -41,7 +41,7 @@ func (uc *useCase) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-func (uc *useCase) FindByID(ctx context.Context, id string) (*dtos.ExpenseResponse, error) {
+func (uc *useCase) FindByID(ctx context.Context, id string) (*dto.ExpenseResponse, error) {
 	expense, err := uc.expenseGateway.Get(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("erro ao buscar despesa: %v", err)
@@ -49,7 +49,7 @@ func (uc *useCase) FindByID(ctx context.Context, id string) (*dtos.ExpenseRespon
 	return uc.toExpenseResponse(expense), nil
 }
 
-func (uc *useCase) List(ctx context.Context, request *dtos.ListExpensesRequest) (*models.Page[*dtos.ExpenseResponse], error) {
+func (uc *useCase) List(ctx context.Context, request *dto.ListExpensesRequest) (*models.Page[*dto.ExpenseResponse], error) {
 	expenses, count, err := uc.expenseGateway.List(
 		ctx,
 		request.Description,
@@ -67,12 +67,12 @@ func (uc *useCase) List(ctx context.Context, request *dtos.ListExpensesRequest) 
 		return nil, fmt.Errorf("erro ao listar despesas: %v", err)
 	}
 
-	responses := make([]*dtos.ExpenseResponse, len(expenses))
+	responses := make([]*dto.ExpenseResponse, len(expenses))
 	for i, expense := range expenses {
 		responses[i] = uc.toExpenseResponse(expense)
 	}
 
-	return &models.Page[*dtos.ExpenseResponse]{
+	return &models.Page[*dto.ExpenseResponse]{
 		Page:       request.Page,
 		Limit:      request.Limit,
 		TotalPages: int64(math.Ceil(float64(count) / float64(request.Limit))),
@@ -80,11 +80,11 @@ func (uc *useCase) List(ctx context.Context, request *dtos.ListExpensesRequest) 
 	}, nil
 }
 
-func (uc *useCase) toExpenseResponse(expense models.Expense) *dtos.ExpenseResponse {
-	var budget *dtos.BudgetResponse
+func (uc *useCase) toExpenseResponse(expense models.Expense) *dto.ExpenseResponse {
+	var budget *dto.BudgetResponse
 	if expense.Budget() != nil {
 		budgetModel := expense.Budget()
-		budget = &dtos.BudgetResponse{
+		budget = &dto.BudgetResponse{
 			ID:          (*budgetModel).ID(),
 			Amount:      (*budgetModel).Amount(),
 			Description: (*budgetModel).Description(),
@@ -95,20 +95,20 @@ func (uc *useCase) toExpenseResponse(expense models.Expense) *dtos.ExpenseRespon
 		}
 	}
 
-	return &dtos.ExpenseResponse{
-		ID: expense.Id(),
-		ExpenseDTO: dtos.ExpenseDTO{
-			Description:  expense.Description(),
-			Amount:       expense.Amount(),
-			Type:         string(expense.Type()),
-			BudgetID:     expense.BudgetId(),
-			Recurrency:   (*string)(expense.Recurrency()),
-			Method:       string(expense.Method()),
-			Installments: expense.Installments(),
-			DueDay:       expense.DueDay(),
-			StartDate:    expense.StartDate(),
-			EndDate:      expense.EndDate(),
-			Budget:       budget,
-		},
+	return &dto.ExpenseResponse{
+		ID:           expense.Id(),
+		Description:  expense.Description(),
+		Amount:       expense.Amount(),
+		Type:         string(expense.Type()),
+		BudgetID:     expense.BudgetId(),
+		Budget:       budget,
+		Recurrency:   (*string)(expense.Recurrency()),
+		Method:       string(expense.Method()),
+		Installments: expense.Installments(),
+		DueDay:       expense.DueDay(),
+		StartDate:    expense.StartDate(),
+		EndDate:      expense.EndDate(),
+		CreatedAt:    expense.StartDate(), // Placeholder - should be from entity
+		UpdatedAt:    expense.StartDate(), // Placeholder - should be from entity
 	}
 }

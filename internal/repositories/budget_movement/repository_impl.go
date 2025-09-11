@@ -2,9 +2,9 @@ package budgetmovement
 
 import (
 	"context"
-	"financial-backend/internal/entities"
-	"financial-backend/internal/models"
-	"financial-backend/internal/views"
+	"financial-backend/internal/domain/entities"
+	"financial-backend/internal/domain/models"
+	"financial-backend/internal/dto/response"
 	"fmt"
 	"time"
 
@@ -102,7 +102,7 @@ func (r *repository) List(ctx context.Context, budgetId, movementType, origin st
 	return
 }
 
-func (r *repository) SummaryBudgetUsageByMonthYear(ctx context.Context, month, year int) (data []views.SummaryBudgetUtilization, err error) {
+func (r *repository) SummaryBudgetUsageByMonthYear(ctx context.Context, month, year int) (data []response.SummaryBudgetUtilization, err error) {
 	query := `select description,
 			   bu.amount,
 			   coalesce(sum(bm.amount),0) usage
@@ -114,7 +114,7 @@ func (r *repository) SummaryBudgetUsageByMonthYear(ctx context.Context, month, y
 	firstOfNextMonth := time.Date(year, time.Month(month)+1, 1, 0, 0, 0, 0, time.UTC)
 
 	if err := r.db.WithContext(ctx).Raw(query, firstOfNextMonth).Scan(&data).Error; err != nil {
-		return []views.SummaryBudgetUtilization{}, fmt.Errorf("erro ao buscar resumo de utilização do orçamento: %w", err)
+		return []response.SummaryBudgetUtilization{}, fmt.Errorf("erro ao buscar resumo de utilização do orçamento: %w", err)
 	}
 
 	return

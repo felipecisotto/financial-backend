@@ -2,11 +2,11 @@ package gateways
 
 import (
 	"context"
-	"financial-backend/internal/entities"
+	"financial-backend/internal/domain/entities"
+	"financial-backend/internal/domain/models"
+	"financial-backend/internal/dto/response"
 	"financial-backend/internal/mappers"
-	"financial-backend/internal/models"
 	budgetmovementRepository "financial-backend/internal/repositories/budget_movement"
-	. "financial-backend/internal/views"
 )
 
 type BudgetMovementGateway interface {
@@ -14,7 +14,7 @@ type BudgetMovementGateway interface {
 	CreateAll(ctx context.Context, movements []models.BudgetMovement) error
 	List(ctx context.Context, budgetId, movementType, origin string, month, year int, page models.PageRequest) ([]models.BudgetMovement, int64, error)
 	GetByID(ctx context.Context, id string) (models.BudgetMovement, error)
-	SummaryBudgetUsageByMonthYear(ctx context.Context, month, year int) (data []SummaryBudgetUtilization, err error)
+	SummaryBudgetUsageByMonthYear(ctx context.Context, month, year int) (data []response.SummaryBudgetUtilization, err error)
 }
 
 type budgetMovementGateway struct {
@@ -67,10 +67,10 @@ func (b *budgetMovementGateway) CreateAll(ctx context.Context, movements []model
 	return b.repository.CreateAll(ctx, entities)
 }
 
-func (b *budgetMovementGateway) SummaryBudgetUsageByMonthYear(ctx context.Context, month, year int) (data []SummaryBudgetUtilization, err error) {
+func (b *budgetMovementGateway) SummaryBudgetUsageByMonthYear(ctx context.Context, month, year int) (data []response.SummaryBudgetUtilization, err error) {
 	data, err = b.repository.SummaryBudgetUsageByMonthYear(ctx, month, year)
 	if err != nil {
-		return []SummaryBudgetUtilization{}, err
+		return []response.SummaryBudgetUtilization{}, err
 	}
 
 	return data, nil

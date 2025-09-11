@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"financial-backend/internal/dtos"
+	"financial-backend/internal/dto"
 	budgetmovement "financial-backend/internal/usecases/budget_movement"
 	"net/http"
 
@@ -19,7 +19,7 @@ func NewBudgetMovementController(uc budgetmovement.UseCase) *BudgetMovementContr
 }
 
 func (c *BudgetMovementController) Create(ctx *gin.Context) {
-	var input dtos.BudgetMovementRequest
+	var input dto.BudgetMovementRequest
 	if err := ctx.ShouldBindJSON(&input); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -35,7 +35,7 @@ func (c *BudgetMovementController) Create(ctx *gin.Context) {
 }
 
 func (c *BudgetMovementController) Find(ctx *gin.Context) {
-	var params dtos.BudgetMovementParams
+	var params dto.BudgetMovementParams
 
 	if err := ctx.ShouldBindQuery(&params); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

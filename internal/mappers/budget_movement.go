@@ -1,9 +1,9 @@
 package mappers
 
 import (
-	"financial-backend/internal/dtos"
-	"financial-backend/internal/entities"
-	"financial-backend/internal/models"
+	"financial-backend/internal/domain/entities"
+	"financial-backend/internal/domain/models"
+	"financial-backend/internal/dto"
 
 	"github.com/google/uuid"
 )
@@ -40,9 +40,9 @@ func ToBudgetMovementModel(bmEntity entities.BudgetMovement) models.BudgetMoveme
 }
 
 // ToDTO converts a BudgetMovement model to a BudgetMovementResponse DTO
-func ToBudgetMovementDTO(bm models.BudgetMovement) dtos.BudgetMovementResponse {
+func ToBudgetMovementDTO(bm models.BudgetMovement) dto.BudgetMovementResponse {
 	if bm.Budget() != nil {
-		return dtos.BudgetMovementResponse{
+		return dto.BudgetMovementResponse{
 			ID:                bm.ID(),
 			Origin:            bm.Origin(),
 			OriginDescription: bm.OriginDescription(),
@@ -54,7 +54,7 @@ func ToBudgetMovementDTO(bm models.BudgetMovement) dtos.BudgetMovementResponse {
 			CreatedAt:         bm.CreatedAt(),
 		}
 	} else {
-		return dtos.BudgetMovementResponse{
+		return dto.BudgetMovementResponse{
 			ID:                bm.ID(),
 			Origin:            bm.Origin(),
 			OriginDescription: bm.OriginDescription(),
@@ -68,7 +68,7 @@ func ToBudgetMovementDTO(bm models.BudgetMovement) dtos.BudgetMovementResponse {
 
 }
 
-func FromDTOToBudgetMovementModel(bm dtos.BudgetMovementRequest) models.BudgetMovement {
+func FromDTOToBudgetMovementModel(bm dto.BudgetMovementRequest) models.BudgetMovement {
 	return models.NewBudgetMovement(
 		uuid.New().String(),
 		bm.BudgetId,

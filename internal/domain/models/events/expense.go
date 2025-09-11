@@ -2,7 +2,7 @@ package events
 
 import (
 	"context"
-	"financial-backend/internal/models"
+	"financial-backend/internal/domain/models"
 )
 
 type ExpenseCreatedEvent struct {

@@ -2,20 +2,20 @@ package budgetmovement
 
 import (
 	"context"
-	"financial-backend/internal/dtos"
+	"financial-backend/internal/domain/models"
+	"financial-backend/internal/dto"
 	"financial-backend/internal/mappers"
-	"financial-backend/internal/models"
 	"time"
 
 	"github.com/google/uuid"
 )
 
-func (uc *useCase) Create(ctx context.Context, request dtos.BudgetMovementRequest) (dtos.BudgetMovementResponse, error) {
+func (uc *useCase) Create(ctx context.Context, request dto.BudgetMovementRequest) (dto.BudgetMovementResponse, error) {
 	budgetMovement := mappers.FromDTOToBudgetMovementModel(request)
 	err := uc.gateway.Create(ctx, budgetMovement)
 
 	if err != nil {
-		return dtos.BudgetMovementResponse{}, err
+		return dto.BudgetMovementResponse{}, err
 	}
 
 	return mappers.ToBudgetMovementDTO(budgetMovement), nil

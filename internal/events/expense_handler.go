@@ -1,7 +1,7 @@
 package events
 
 import (
-	"financial-backend/internal/models/events"
+	"financial-backend/internal/domain/models/events"
 	budgetmovement "financial-backend/internal/usecases/budget_movement"
 	"financial-backend/pkg/config"
 

@@ -1,8 +1,8 @@
 package mappers
 
 import (
-	"financial-backend/internal/entities"
-	"financial-backend/internal/models"
+	"financial-backend/internal/domain/entities"
+	"financial-backend/internal/domain/models"
 )
 
 func ToExpenseModel(entity *entities.Expense) models.Expense {

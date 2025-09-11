@@ -2,9 +2,9 @@ package budgetmovement
 
 import (
 	"context"
-	"financial-backend/internal/entities"
-	"financial-backend/internal/models"
-	"financial-backend/internal/views"
+	"financial-backend/internal/domain/entities"
+	"financial-backend/internal/domain/models"
+	"financial-backend/internal/dto/response"
 )
 
 type Repository interface {
@@ -12,5 +12,5 @@ type Repository interface {
 	Create(ctx context.Context, budgetMovement entities.BudgetMovement) error
 	List(ctx context.Context, budgetId, movementType, origin string, month, year int, page models.PageRequest) ([]entities.BudgetMovement, int64, error)
 	GetById(ctx context.Context, id string) (*entities.BudgetMovement, error)
-	SummaryBudgetUsageByMonthYear(ctx context.Context, month, year int) (data []views.SummaryBudgetUtilization, err error)
+	SummaryBudgetUsageByMonthYear(ctx context.Context, month, year int) (data []response.SummaryBudgetUtilization, err error)
 }

@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	"financial-backend/internal/entities"
+	"financial-backend/internal/domain/entities"
+	"financial-backend/internal/domain/models"
 	"financial-backend/internal/mappers"
-	"financial-backend/internal/models"
 	"financial-backend/internal/repositories/expense"
 )
 

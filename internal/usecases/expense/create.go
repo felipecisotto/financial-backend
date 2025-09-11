@@ -2,16 +2,17 @@ package expense
 
 import (
 	"context"
-	"financial-backend/internal/dtos"
-	"financial-backend/internal/models"
-	"financial-backend/internal/models/events"
 	"fmt"
 	"time"
+
+	"financial-backend/internal/domain/models"
+	"financial-backend/internal/domain/models/events"
+	"financial-backend/internal/dto"
 
 	"github.com/google/uuid"
 )
 
-func (uc *useCase) Create(ctx context.Context, input *dtos.ExpenseDTO) (*dtos.ExpenseResponse, error) {
+func (uc *useCase) Create(ctx context.Context, input *dto.ExpenseDTO) (*dto.ExpenseResponse, error) {
 	var endDate *time.Time
 	var startDate time.Time
 

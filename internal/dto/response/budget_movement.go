@@ -1,15 +1,8 @@
-package dtos
+package response
 
 import "time"
 
-type BudgetMovementRequest struct {
-	BudgetId string `json:"budget_id"`
-	Origin   string `json:"origin"`
-	Month    int    `json:"month"`
-	Year     int    `json:"year"`
-	Type     string `json:"type"`
-	Amount   int    `json:"amount"`
-}
+// BudgetMovementResponse representa a resposta com os dados de um movimento
 type BudgetMovementResponse struct {
 	ID                string         `json:"id"`
 	Budget            BudgetResponse `json:"budget"`
@@ -20,13 +13,4 @@ type BudgetMovementResponse struct {
 	Type              string         `json:"type"`
 	Amount            int            `json:"amount"`
 	CreatedAt         time.Time      `json:"created_at"`
-}
-
-type BudgetMovementParams struct {
-	BudgetId     string `form:"budget_id"`
-	MovementType string `form:"movement_type"`
-	Origin       string `form:"origin"`
-	Month        int    `form:"month"`
-	Year         int    `form:"year"`
-	PageRequest
 }

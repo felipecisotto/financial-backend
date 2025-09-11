@@ -14,7 +14,7 @@ type PageRequest struct {
 
 func (p *PageRequest) Offset() int {
 	newPage := (int(p.Page) - 1)
-	if (newPage < 0) {
+	if newPage < 0 {
 		return 0
 	}
 	return newPage * int(p.Limit)

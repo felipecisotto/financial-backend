@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"financial-backend/internal/entities"
+	"financial-backend/internal/domain/entities"
 
 	"gorm.io/gorm"
 )

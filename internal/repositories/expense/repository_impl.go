@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"financial-backend/internal/entities"
-	"financial-backend/internal/models"
+	"financial-backend/internal/domain/entities"
+	"financial-backend/internal/domain/models"
 
 	"gorm.io/gorm"
 )

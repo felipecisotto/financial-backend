@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"financial-backend/internal/dtos"
+	"financial-backend/internal/dto"
 	"financial-backend/internal/usecases/dashboard"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -18,7 +18,7 @@ func NewDashboardController(uc dashboard.UseCase) *DashboardController {
 }
 
 func (d *DashboardController) GetSummary(ctx *gin.Context) {
-	var input dtos.SummaryQueryParams
+	var input dto.SummaryQueryParams
 
 	if err := ctx.ShouldBindQuery(&input); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -35,7 +35,7 @@ func (d *DashboardController) GetSummary(ctx *gin.Context) {
 }
 
 func (d *DashboardController) SummaryBudgetUsageByMonthYear(ctx *gin.Context) {
-	var input dtos.SummaryQueryParams
+	var input dto.SummaryQueryParams
 
 	if err := ctx.ShouldBindQuery(&input); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

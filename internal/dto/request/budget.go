@@ -1,4 +1,4 @@
-package dtos
+package request
 
 import "time"
 
@@ -14,19 +14,10 @@ type UpdateBudgetRequest struct {
 	EndDate time.Time `json:"end_date" binding:"required"`
 }
 
-// BudgetResponse representa a resposta com os dados de um orçamento
-type BudgetResponse struct {
-	ID          string     `json:"id"`
-	Description string     `json:"description"`
-	Amount      float64    `json:"amount"`
-	EndDate     *time.Time `json:"end_date"`
-	Status      string     `json:"status"`
-	CreatedAt   time.Time  `json:"created_at"`
-	UpdatedAt   time.Time  `json:"updated_at"`
-}
-
+// BudgetListParams representa os parâmetros para listar orçamentos
 type BudgetListParams struct {
 	Description string `form:"description"`
 	Status      string `form:"status"`
-	PageRequest
+	Page        int64  `form:"page,default=1"`
+	Limit       int64  `form:"limit,default=10"`
 }

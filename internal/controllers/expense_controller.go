@@ -3,7 +3,7 @@ package controllers
 import (
 	"net/http"
 
-	"financial-backend/internal/dtos"
+	"financial-backend/internal/dto"
 	"financial-backend/internal/usecases/expense"
 
 	"github.com/gin-gonic/gin"
@@ -20,7 +20,7 @@ func NewExpenseController(useCase expense.UseCase) *ExpenseController {
 }
 
 func (c *ExpenseController) Create(ctx *gin.Context) {
-	var input dtos.ExpenseDTO
+	var input dto.ExpenseDTO
 	if err := ctx.ShouldBindJSON(&input); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -57,7 +57,7 @@ func (c *ExpenseController) GetByID(ctx *gin.Context) {
 }
 
 func (c *ExpenseController) List(ctx *gin.Context) {
-	var input dtos.ListExpensesRequest
+	var input dto.ListExpensesRequest
 	if err := ctx.ShouldBindQuery(&input); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
