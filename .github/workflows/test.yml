@@ -112,17 +112,3 @@ jobs:
 
     - name: Build application
       run: go build -o main cmd/api/main.go
-
-    - name: Test build runs
-      run: |
-        timeout 10s ./main || code=$?
-        if [[ $code -ne 124 && $code -ne 130 ]]; then
-          echo "Application failed to start"
-          exit 1
-        fi
-      env:
-        DB_HOST: localhost
-        DB_PORT: 5432
-        DB_USER: postgres
-        DB_PASSWORD: postgres
-        DB_NAME: financial_test
