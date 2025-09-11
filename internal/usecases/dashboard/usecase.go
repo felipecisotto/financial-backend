@@ -2,8 +2,8 @@ package dashboard
 
 import (
 	. "context"
-	. "financial-backend/internal/gateways"
 	"financial-backend/internal/dto/response"
+	. "financial-backend/internal/gateways"
 	"golang.org/x/net/context"
 	"sync"
 )

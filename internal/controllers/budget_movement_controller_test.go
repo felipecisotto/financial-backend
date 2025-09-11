@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"financial-backend/internal/dto"
 	"financial-backend/internal/domain/models"
+	"financial-backend/internal/dto"
 	"financial-backend/mocks"
 
 	"github.com/gin-gonic/gin"
@@ -28,10 +28,10 @@ type BudgetMovementControllerTestSuite struct {
 
 func (s *BudgetMovementControllerTestSuite) SetupTest() {
 	gin.SetMode(gin.TestMode)
-	
+
 	s.mockUseCase = &mocks.MockBudgetMovementUseCase{}
 	s.controller = NewBudgetMovementController(s.mockUseCase)
-	
+
 	s.router = gin.New()
 	apiGroup := s.router.Group("/api")
 	s.controller.RegisterRoutes(apiGroup)
@@ -77,7 +77,7 @@ func (s *BudgetMovementControllerTestSuite) TestCreate_Success() {
 	s.router.ServeHTTP(w, req)
 
 	assert.Equal(s.T(), http.StatusCreated, w.Code)
-	
+
 	var response dto.BudgetMovementResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(s.T(), err)
@@ -87,7 +87,7 @@ func (s *BudgetMovementControllerTestSuite) TestCreate_Success() {
 
 func (s *BudgetMovementControllerTestSuite) TestCreate_InvalidJSON() {
 	invalidJSON := `{"budget_id":"test","amount":}`
-	
+
 	req := httptest.NewRequest(http.MethodPost, "/api/movements", bytes.NewBufferString(invalidJSON))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
@@ -153,7 +153,7 @@ func (s *BudgetMovementControllerTestSuite) TestFind_Success() {
 	s.router.ServeHTTP(w, req)
 
 	assert.Equal(s.T(), http.StatusOK, w.Code)
-	
+
 	var response models.Page[dto.BudgetMovementResponse]
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(s.T(), err)

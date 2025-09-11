@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"math"
 
+	"financial-backend/internal/domain/models"
 	"financial-backend/internal/dto"
 	"financial-backend/internal/gateways"
-	"financial-backend/internal/domain/models"
 	"financial-backend/pkg/config"
 )
 

@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"financial-backend/internal/dto"
 	"financial-backend/internal/domain/models"
+	"financial-backend/internal/dto"
 	"financial-backend/mocks"
 
 	"github.com/gin-gonic/gin"
@@ -28,10 +28,10 @@ type BudgetControllerTestSuite struct {
 
 func (s *BudgetControllerTestSuite) SetupTest() {
 	gin.SetMode(gin.TestMode)
-	
+
 	s.mockUseCase = &mocks.MockBudgetUseCase{}
 	s.controller = NewBudgetController(s.mockUseCase)
-	
+
 	s.router = gin.New()
 	apiGroup := s.router.Group("/api")
 	s.controller.RegisterRoutes(apiGroup)
@@ -68,7 +68,7 @@ func (s *BudgetControllerTestSuite) TestCreate_Success() {
 	s.router.ServeHTTP(w, req)
 
 	assert.Equal(s.T(), http.StatusCreated, w.Code)
-	
+
 	var response dto.BudgetResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(s.T(), err)
@@ -78,7 +78,7 @@ func (s *BudgetControllerTestSuite) TestCreate_Success() {
 
 func (s *BudgetControllerTestSuite) TestCreate_InvalidJSON() {
 	invalidJSON := `{"description":"Test","amount":}`
-	
+
 	req := httptest.NewRequest(http.MethodPost, "/api/budgets", bytes.NewBufferString(invalidJSON))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
@@ -153,7 +153,7 @@ func (s *BudgetControllerTestSuite) TestUpdate_Success() {
 func (s *BudgetControllerTestSuite) TestUpdate_InvalidJSON() {
 	budgetID := "test-budget-id"
 	invalidJSON := `{"end_date":}`
-	
+
 	req := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/budgets/%s", budgetID), bytes.NewBufferString(invalidJSON))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
@@ -165,7 +165,7 @@ func (s *BudgetControllerTestSuite) TestUpdate_InvalidJSON() {
 
 func (s *BudgetControllerTestSuite) TestDelete_Success() {
 	budgetID := "test-budget-id"
-	
+
 	s.mockUseCase.On("Delete", mock.Anything, budgetID).Return(nil)
 
 	req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/api/budgets/%s", budgetID), nil)
@@ -179,7 +179,7 @@ func (s *BudgetControllerTestSuite) TestDelete_Success() {
 
 func (s *BudgetControllerTestSuite) TestDelete_UseCaseError() {
 	budgetID := "test-budget-id"
-	
+
 	s.mockUseCase.On("Delete", mock.Anything, budgetID).Return(fmt.Errorf("delete error"))
 
 	req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/api/budgets/%s", budgetID), nil)
@@ -209,7 +209,7 @@ func (s *BudgetControllerTestSuite) TestGet_Success() {
 	s.router.ServeHTTP(w, req)
 
 	assert.Equal(s.T(), http.StatusOK, w.Code)
-	
+
 	var response dto.BudgetResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(s.T(), err)
@@ -219,7 +219,7 @@ func (s *BudgetControllerTestSuite) TestGet_Success() {
 
 func (s *BudgetControllerTestSuite) TestGet_NotFound() {
 	budgetID := "non-existent-id"
-	
+
 	s.mockUseCase.On("Get", mock.Anything, budgetID).Return(dto.BudgetResponse{}, fmt.Errorf("budget not found"))
 
 	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/budgets/%s", budgetID), nil)
@@ -267,7 +267,7 @@ func (s *BudgetControllerTestSuite) TestList_Success() {
 	s.router.ServeHTTP(w, req)
 
 	assert.Equal(s.T(), http.StatusOK, w.Code)
-	
+
 	var response models.Page[dto.BudgetResponse]
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(s.T(), err)

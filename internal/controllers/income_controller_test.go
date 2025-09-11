@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"financial-backend/internal/dto"
 	"financial-backend/internal/domain/models"
+	"financial-backend/internal/dto"
 	"financial-backend/mocks"
 
 	"github.com/gin-gonic/gin"
@@ -28,10 +28,10 @@ type IncomeControllerTestSuite struct {
 
 func (s *IncomeControllerTestSuite) SetupTest() {
 	gin.SetMode(gin.TestMode)
-	
+
 	s.mockUseCase = &mocks.MockIncomeUseCase{}
 	s.controller = NewIncomeController(s.mockUseCase)
-	
+
 	s.router = gin.New()
 	apiGroup := s.router.Group("/api")
 	s.controller.RegisterRoutes(apiGroup)
@@ -73,7 +73,7 @@ func (s *IncomeControllerTestSuite) TestCreate_Success() {
 	s.router.ServeHTTP(w, req)
 
 	assert.Equal(s.T(), http.StatusCreated, w.Code)
-	
+
 	var response dto.IncomeResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(s.T(), err)
@@ -83,7 +83,7 @@ func (s *IncomeControllerTestSuite) TestCreate_Success() {
 
 func (s *IncomeControllerTestSuite) TestCreate_InvalidJSON() {
 	invalidJSON := `{"description":"Test","amount":}`
-	
+
 	req := httptest.NewRequest(http.MethodPost, "/api/incomes", bytes.NewBufferString(invalidJSON))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
@@ -156,7 +156,7 @@ func (s *IncomeControllerTestSuite) TestUpdate_Success() {
 	s.router.ServeHTTP(w, req)
 
 	assert.Equal(s.T(), http.StatusOK, w.Code)
-	
+
 	var response dto.IncomeResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(s.T(), err)
@@ -167,7 +167,7 @@ func (s *IncomeControllerTestSuite) TestUpdate_Success() {
 func (s *IncomeControllerTestSuite) TestUpdate_InvalidJSON() {
 	incomeID := "test-income-id"
 	invalidJSON := `{"amount":}`
-	
+
 	req := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/incomes/%s", incomeID), bytes.NewBufferString(invalidJSON))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
@@ -200,7 +200,7 @@ func (s *IncomeControllerTestSuite) TestUpdate_UseCaseError() {
 
 func (s *IncomeControllerTestSuite) TestDelete_Success() {
 	incomeID := "test-income-id"
-	
+
 	s.mockUseCase.On("Delete", mock.Anything, incomeID).Return(nil)
 
 	req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/api/incomes/%s", incomeID), nil)
@@ -214,7 +214,7 @@ func (s *IncomeControllerTestSuite) TestDelete_Success() {
 
 func (s *IncomeControllerTestSuite) TestDelete_UseCaseError() {
 	incomeID := "test-income-id"
-	
+
 	s.mockUseCase.On("Delete", mock.Anything, incomeID).Return(fmt.Errorf("delete error"))
 
 	req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/api/incomes/%s", incomeID), nil)
@@ -246,7 +246,7 @@ func (s *IncomeControllerTestSuite) TestGet_Success() {
 	s.router.ServeHTTP(w, req)
 
 	assert.Equal(s.T(), http.StatusOK, w.Code)
-	
+
 	var response dto.IncomeResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(s.T(), err)
@@ -256,7 +256,7 @@ func (s *IncomeControllerTestSuite) TestGet_Success() {
 
 func (s *IncomeControllerTestSuite) TestGet_NotFound() {
 	incomeID := "non-existent-id"
-	
+
 	s.mockUseCase.On("Get", mock.Anything, incomeID).Return(nil, fmt.Errorf("income not found"))
 
 	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/incomes/%s", incomeID), nil)
@@ -308,7 +308,7 @@ func (s *IncomeControllerTestSuite) TestList_Success() {
 	s.router.ServeHTTP(w, req)
 
 	assert.Equal(s.T(), http.StatusOK, w.Code)
-	
+
 	var response models.Page[*dto.IncomeResponse]
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(s.T(), err)

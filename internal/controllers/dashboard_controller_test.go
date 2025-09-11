@@ -25,10 +25,10 @@ type DashboardControllerTestSuite struct {
 
 func (s *DashboardControllerTestSuite) SetupTest() {
 	gin.SetMode(gin.TestMode)
-	
+
 	s.mockUseCase = &mocks.MockDashboardUseCase{}
 	s.controller = NewDashboardController(s.mockUseCase)
-	
+
 	s.router = gin.New()
 	apiGroup := s.router.Group("/api")
 	s.controller.RegisterRoutes(apiGroup)
@@ -53,7 +53,7 @@ func (s *DashboardControllerTestSuite) TestGetSummary_Success() {
 	s.router.ServeHTTP(w, req)
 
 	assert.Equal(s.T(), http.StatusOK, w.Code)
-	
+
 	var response response.SummaryView
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(s.T(), err)
@@ -113,7 +113,7 @@ func (s *DashboardControllerTestSuite) TestSummaryBudgetUsageByMonthYear_Success
 	s.router.ServeHTTP(w, req)
 
 	assert.Equal(s.T(), http.StatusOK, w.Code)
-	
+
 	var response []response.SummaryBudgetUtilization
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(s.T(), err)

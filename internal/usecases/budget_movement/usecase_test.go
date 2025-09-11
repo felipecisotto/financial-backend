@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"financial-backend/internal/dto"
 	"financial-backend/internal/domain/models"
+	"financial-backend/internal/dto"
 	"financial-backend/mocks"
 
 	"github.com/stretchr/testify/assert"
@@ -196,11 +196,11 @@ func (s *BudgetMovementUseCaseTestSuite) TestCreateRecurrencyMovements_Success()
 	// Mock getting expenses without movement
 	mockExpenses := []models.Expense{}
 	s.mockExpenseGateway.On("GetExpensesWithoutMovementInMonth", ctx).Return(mockExpenses, nil)
-	
+
 	// Mock getting budgets without movement
 	mockBudgets := []models.Budget{}
 	s.mockBudgetGateway.On("GetBudgetsWithoutMovement", ctx).Return(mockBudgets, nil)
-	
+
 	// Mock creating all movements (empty list)
 	s.mockBudgetMovementGateway.On("CreateAll", ctx, mock.Anything).Return(nil)
 
@@ -216,7 +216,7 @@ func (s *BudgetMovementUseCaseTestSuite) TestCreateRecurrencyMovements_WithExpen
 	mockBudget := models.NewBudget("budget-1", 1000.0, "Test Budget", nil)
 	budgetId := "budget-1"
 	recurrency := string(models.ExpenseRecurrencyMonthly)
-	
+
 	// Create mock expenses with proper budget and recurrency
 	expense1, _ := models.NewExpense(
 		"expense-1",
@@ -236,11 +236,11 @@ func (s *BudgetMovementUseCaseTestSuite) TestCreateRecurrencyMovements_WithExpen
 	mockExpenses := []models.Expense{expense1}
 
 	s.mockExpenseGateway.On("GetExpensesWithoutMovementInMonth", ctx).Return(mockExpenses, nil)
-	
+
 	// Mock getting budgets without movement
 	mockBudgets := []models.Budget{}
 	s.mockBudgetGateway.On("GetBudgetsWithoutMovement", ctx).Return(mockBudgets, nil)
-	
+
 	s.mockBudgetMovementGateway.On("CreateAll", ctx, mock.Anything).Return(nil)
 
 	err := s.useCase.CreateRecurrencyMovements(ctx)

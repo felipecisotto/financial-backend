@@ -1,9 +1,9 @@
 package mappers
 
 import (
-	"financial-backend/internal/dto"
 	"financial-backend/internal/domain/entities"
 	"financial-backend/internal/domain/models"
+	"financial-backend/internal/dto"
 
 	"github.com/google/uuid"
 )

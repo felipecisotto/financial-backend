@@ -56,4 +56,3 @@ func (f *BudgetFactory) CreateDefault() *entities.Budget {
 		EndDate:     &endDate,
 	})
 }
-

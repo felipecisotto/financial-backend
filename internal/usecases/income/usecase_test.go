@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"financial-backend/internal/dto"
 	"financial-backend/internal/domain/models"
+	"financial-backend/internal/dto"
 	"financial-backend/mocks"
 
 	"github.com/stretchr/testify/assert"

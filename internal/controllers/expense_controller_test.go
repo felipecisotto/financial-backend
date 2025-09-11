@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"financial-backend/internal/dto"
 	"financial-backend/internal/domain/models"
+	"financial-backend/internal/dto"
 	"financial-backend/mocks"
 
 	"github.com/gin-gonic/gin"
@@ -28,10 +28,10 @@ type ExpenseControllerTestSuite struct {
 
 func (s *ExpenseControllerTestSuite) SetupTest() {
 	gin.SetMode(gin.TestMode)
-	
+
 	s.mockUseCase = &mocks.MockExpenseUseCase{}
 	s.controller = NewExpenseController(s.mockUseCase)
-	
+
 	s.router = gin.New()
 	apiGroup := s.router.Group("/api")
 	s.controller.RegisterRoutes(apiGroup)
@@ -52,19 +52,19 @@ func (s *ExpenseControllerTestSuite) TestCreate_Success() {
 	}
 
 	expectedResponse := &dto.ExpenseResponse{
-		ID:          "test-id",
-		Description: expenseDTO.Description,
-		Amount:      expenseDTO.Amount,
-		Type:        expenseDTO.Type,
-		Method:      expenseDTO.Method,
-		DueDay:      expenseDTO.DueDay,
-		StartDate:   expenseDTO.StartDate,
-		EndDate:     expenseDTO.EndDate,
-		BudgetID:    expenseDTO.BudgetID,
-		Recurrency:  expenseDTO.Recurrency,
+		ID:           "test-id",
+		Description:  expenseDTO.Description,
+		Amount:       expenseDTO.Amount,
+		Type:         expenseDTO.Type,
+		Method:       expenseDTO.Method,
+		DueDay:       expenseDTO.DueDay,
+		StartDate:    expenseDTO.StartDate,
+		EndDate:      expenseDTO.EndDate,
+		BudgetID:     expenseDTO.BudgetID,
+		Recurrency:   expenseDTO.Recurrency,
 		Installments: expenseDTO.Installments,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
 	}
 
 	s.mockUseCase.On("Create", mock.Anything, mock.MatchedBy(func(dto *dto.ExpenseDTO) bool {
@@ -79,7 +79,7 @@ func (s *ExpenseControllerTestSuite) TestCreate_Success() {
 	s.router.ServeHTTP(w, req)
 
 	assert.Equal(s.T(), http.StatusCreated, w.Code)
-	
+
 	var response dto.ExpenseResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(s.T(), err)
@@ -89,7 +89,7 @@ func (s *ExpenseControllerTestSuite) TestCreate_Success() {
 
 func (s *ExpenseControllerTestSuite) TestCreate_InvalidJSON() {
 	invalidJSON := `{"description":"Test","amount":}`
-	
+
 	req := httptest.NewRequest(http.MethodPost, "/api/expenses", bytes.NewBufferString(invalidJSON))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
@@ -97,7 +97,7 @@ func (s *ExpenseControllerTestSuite) TestCreate_InvalidJSON() {
 	s.router.ServeHTTP(w, req)
 
 	assert.Equal(s.T(), http.StatusBadRequest, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(s.T(), err)
@@ -142,7 +142,7 @@ func (s *ExpenseControllerTestSuite) TestCreate_UseCaseError() {
 	s.router.ServeHTTP(w, req)
 
 	assert.Equal(s.T(), http.StatusInternalServerError, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(s.T(), err)
@@ -151,7 +151,7 @@ func (s *ExpenseControllerTestSuite) TestCreate_UseCaseError() {
 
 func (s *ExpenseControllerTestSuite) TestDelete_Success() {
 	expenseID := "test-expense-id"
-	
+
 	s.mockUseCase.On("Delete", mock.Anything, expenseID).Return(nil)
 
 	req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/api/expenses/%s", expenseID), nil)
@@ -165,7 +165,7 @@ func (s *ExpenseControllerTestSuite) TestDelete_Success() {
 
 func (s *ExpenseControllerTestSuite) TestDelete_UseCaseError() {
 	expenseID := "test-expense-id"
-	
+
 	s.mockUseCase.On("Delete", mock.Anything, expenseID).Return(fmt.Errorf("delete error"))
 
 	req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/api/expenses/%s", expenseID), nil)
@@ -174,7 +174,7 @@ func (s *ExpenseControllerTestSuite) TestDelete_UseCaseError() {
 	s.router.ServeHTTP(w, req)
 
 	assert.Equal(s.T(), http.StatusInternalServerError, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(s.T(), err)
@@ -203,7 +203,7 @@ func (s *ExpenseControllerTestSuite) TestGetByID_Success() {
 	s.router.ServeHTTP(w, req)
 
 	assert.Equal(s.T(), http.StatusOK, w.Code)
-	
+
 	var response dto.ExpenseResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(s.T(), err)
@@ -213,7 +213,7 @@ func (s *ExpenseControllerTestSuite) TestGetByID_Success() {
 
 func (s *ExpenseControllerTestSuite) TestGetByID_NotFound() {
 	expenseID := "non-existent-id"
-	
+
 	s.mockUseCase.On("FindByID", mock.Anything, expenseID).Return(nil, fmt.Errorf("expense not found"))
 
 	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/expenses/%s", expenseID), nil)
@@ -222,7 +222,7 @@ func (s *ExpenseControllerTestSuite) TestGetByID_NotFound() {
 	s.router.ServeHTTP(w, req)
 
 	assert.Equal(s.T(), http.StatusInternalServerError, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(s.T(), err)
@@ -272,7 +272,7 @@ func (s *ExpenseControllerTestSuite) TestList_Success() {
 	s.router.ServeHTTP(w, req)
 
 	assert.Equal(s.T(), http.StatusOK, w.Code)
-	
+
 	var response models.Page[*dto.ExpenseResponse]
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(s.T(), err)
@@ -301,7 +301,7 @@ func (s *ExpenseControllerTestSuite) TestList_UseCaseError() {
 	s.router.ServeHTTP(w, req)
 
 	assert.Equal(s.T(), http.StatusInternalServerError, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(s.T(), err)

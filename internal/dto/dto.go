@@ -8,34 +8,34 @@ import (
 
 // Request types
 type (
-	CreateExpenseRequest     = request.CreateExpenseRequest
-	UpdateExpenseRequest     = request.UpdateExpenseRequest
-	ListExpensesRequest      = request.ListExpensesRequest
-	CreateBudgetRequest      = request.CreateBudgetRequest
-	UpdateBudgetRequest      = request.UpdateBudgetRequest
-	BudgetListParams         = request.BudgetListParams
-	CreateIncomeRequest      = request.CreateIncomeRequest
-	UpdateIncomeRequest      = request.UpdateIncomeRequest
-	ListIncomeParams         = request.ListIncomeParams
-	BudgetMovementRequest    = request.BudgetMovementRequest
-	BudgetMovementParams     = request.BudgetMovementParams
-	SummaryQueryParams       = request.SummaryQueryParams
+	CreateExpenseRequest  = request.CreateExpenseRequest
+	UpdateExpenseRequest  = request.UpdateExpenseRequest
+	ListExpensesRequest   = request.ListExpensesRequest
+	CreateBudgetRequest   = request.CreateBudgetRequest
+	UpdateBudgetRequest   = request.UpdateBudgetRequest
+	BudgetListParams      = request.BudgetListParams
+	CreateIncomeRequest   = request.CreateIncomeRequest
+	UpdateIncomeRequest   = request.UpdateIncomeRequest
+	ListIncomeParams      = request.ListIncomeParams
+	BudgetMovementRequest = request.BudgetMovementRequest
+	BudgetMovementParams  = request.BudgetMovementParams
+	SummaryQueryParams    = request.SummaryQueryParams
 )
 
 // Response types
 type (
-	ExpenseResponse           = response.ExpenseResponse
-	ListExpensesResponse      = response.ListExpensesResponse
-	BudgetResponse            = response.BudgetResponse
-	IncomeResponse            = response.IncomeResponse
-	BudgetMovementResponse    = response.BudgetMovementResponse
-	SummaryView               = response.SummaryView
-	SummaryBudgetUtilization  = response.SummaryBudgetUtilization
+	ExpenseResponse          = response.ExpenseResponse
+	ListExpensesResponse     = response.ListExpensesResponse
+	BudgetResponse           = response.BudgetResponse
+	IncomeResponse           = response.IncomeResponse
+	BudgetMovementResponse   = response.BudgetMovementResponse
+	SummaryView              = response.SummaryView
+	SummaryBudgetUtilization = response.SummaryBudgetUtilization
 )
 
 // Legacy types for backward compatibility (remove after refactoring)
 type (
-	ExpenseDTO = CreateExpenseRequest  // ExpenseDTO maps to CreateExpenseRequest
+	ExpenseDTO = CreateExpenseRequest // ExpenseDTO maps to CreateExpenseRequest
 )
 
 // Common types

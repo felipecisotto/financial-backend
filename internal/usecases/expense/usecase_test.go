@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"financial-backend/internal/dto"
 	"financial-backend/internal/domain/models"
+	"financial-backend/internal/dto"
 	"financial-backend/mocks"
 
 	"github.com/stretchr/testify/assert"
@@ -27,7 +27,7 @@ func (s *ExpenseUseCaseTestSuite) SetupTest() {
 	s.mockExpenseGateway = &mocks.MockExpenseGateway{}
 	s.mockBudgetGateway = &mocks.MockBudgetGateway{}
 	s.mockPublisher = &mocks.MockPublisher{}
-	
+
 	s.useCase = NewUseCase(s.mockExpenseGateway, s.mockBudgetGateway, s.mockPublisher, 15)
 }
 
@@ -52,7 +52,7 @@ func (s *ExpenseUseCaseTestSuite) TestCreate_Success() {
 
 	// Mock the gateway call to succeed
 	s.mockExpenseGateway.On("Create", ctx, mock.Anything).Return(nil)
-	
+
 	// Mock the publisher call
 	s.mockPublisher.On("Publish", mock.Anything).Return()
 
@@ -109,7 +109,7 @@ func (s *ExpenseUseCaseTestSuite) TestCreate_CreditCardExpense() {
 		return exp.StartDate().Day() == expectedStartDate.Day() &&
 			exp.EndDate() != nil // Should have end date for installments
 	})).Return(nil)
-	
+
 	// Mock the publisher call
 	s.mockPublisher.On("Publish", mock.Anything).Return()
 

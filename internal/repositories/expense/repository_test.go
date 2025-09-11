@@ -30,7 +30,6 @@ func (s *ExpenseRepositoryTestSuite) TearDownSuite() {
 	s.cleanup()
 }
 
-
 func (s *ExpenseRepositoryTestSuite) TestCreate_Success() {
 	expense := &entities.Expense{
 		ID:          uuid.New().String(),
@@ -64,7 +63,7 @@ func (s *ExpenseRepositoryTestSuite) TestCreate_WithBudgetID() {
 
 func (s *ExpenseRepositoryTestSuite) TestGet_NotFound() {
 	nonExistentID := uuid.New().String()
-	
+
 	expense, err := s.repository.Get(context.Background(), nonExistentID)
 	assert.Error(s.T(), err)
 	assert.Nil(s.T(), expense)
@@ -136,7 +135,7 @@ func (s *ExpenseRepositoryTestSuite) TestList_WithFilters() {
 
 func (s *ExpenseRepositoryTestSuite) TestList_WithPagination() {
 	ctx := context.Background()
-	
+
 	// Create multiple test expenses
 	for i := 0; i < 5; i++ {
 		expense := &entities.Expense{
@@ -158,7 +157,7 @@ func (s *ExpenseRepositoryTestSuite) TestList_WithPagination() {
 	page1 := models.PageRequest{Page: 1, Limit: 2}
 	results, count, err := s.repository.List(ctx, "", "", "", "", "", "", page1)
 	assert.NoError(s.T(), err)
-	assert.Greater(s.T(), count, int64(4)) // Should have at least 5 expenses
+	assert.Greater(s.T(), count, int64(4))     // Should have at least 5 expenses
 	assert.LessOrEqual(s.T(), len(results), 2) // Should return max 2 results
 
 	// Test pagination - second page
@@ -176,11 +175,11 @@ func (s *ExpenseRepositoryTestSuite) TestList_WithPagination() {
 
 func (s *ExpenseRepositoryTestSuite) TestSummaryByMonth() {
 	ctx := context.Background()
-	
+
 	// Create expenses for a specific month
 	year, month := 2024, 1
 	testDate := time.Date(year, time.Month(month), 15, 0, 0, 0, 0, time.UTC)
-	
+
 	expenses := []*entities.Expense{
 		{
 			ID:          uuid.New().String(),
