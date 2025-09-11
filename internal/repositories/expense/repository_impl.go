@@ -113,7 +113,7 @@ and e.budget_id is not null
 	return
 }
 func (r *repository) SummaryByMonth(ctx context.Context, month int, year int) (float64, error) {
-	query := "select sum(amount) as total_expense from expenses  where start_date >= ? and (end_date <= ? or end_date is null)"
+	query := "select COALESCE(sum(amount), 0) as total_expense from expenses  where start_date >= ? and (end_date <= ? or end_date is null)"
 
 	startDate := fmt.Sprintf("%d-%02d-01", year, month)
 	endDate := fmt.Sprintf("%d-%02d-01", year, month+1)
