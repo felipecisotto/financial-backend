@@ -1,25 +1,24 @@
 package dashboard
 
 import (
-	. "context"
+	"context"
 	"financial-backend/internal/dto/response"
-	. "financial-backend/internal/gateways"
-	"golang.org/x/net/context"
+	"financial-backend/internal/gateways"
 	"sync"
 )
 
 type UseCase interface {
-	GetSummary(ctx Context, month, year int) (response.SummaryView, error)
+	GetSummary(ctx context.Context, month, year int) (response.SummaryView, error)
 	SummaryBudgetUsageByMonthYear(ctx context.Context, month, year int) (data []response.SummaryBudgetUtilization, err error)
 }
 
 type useCase struct {
-	expenseGateway        ExpenseGateway
-	incomeGateway         IncomeGateway
-	budgetMovementGateway BudgetMovementGateway
+	expenseGateway        gateways.ExpenseGateway
+	incomeGateway         gateways.IncomeGateway
+	budgetMovementGateway gateways.BudgetMovementGateway
 }
 
-func (u useCase) GetSummary(ctx Context, month, year int) (response.SummaryView, error) {
+func (u useCase) GetSummary(ctx context.Context, month, year int) (response.SummaryView, error) {
 	var wg sync.WaitGroup
 	var income, expense float64
 	var incomeErr, expenseErr error
@@ -61,9 +60,9 @@ func (u *useCase) SummaryBudgetUsageByMonthYear(ctx context.Context, month, year
 	return
 }
 func NewDashBoardUseCase(
-	expenseGateway ExpenseGateway,
-	incomeGateway IncomeGateway,
-	budgetMovement BudgetMovementGateway,
+	expenseGateway gateways.ExpenseGateway,
+	incomeGateway gateways.IncomeGateway,
+	budgetMovement gateways.BudgetMovementGateway,
 ) UseCase {
 	return &useCase{
 		expenseGateway:        expenseGateway,
