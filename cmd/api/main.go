@@ -25,6 +25,9 @@ import (
 	"financial-backend/pkg/config"
 	"financial-backend/pkg/telemetry"
 
+	"financial-backend/internal/mcp/tools"
+	"financial-backend/pkg/mcp"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -69,6 +72,33 @@ func main() {
 	budgetUC := budgetUseCase.NewUseCase(budgetGateway)
 	budgetMovementUC := budgetMovementUseCase.NewBudgetMovementUseCase(budgetMovementGateway, budgetGateway, expenseGateway)
 	dashboardUC := dashboard.NewDashBoardUseCase(expenseGateway, incomeGateway, budgetMovementGateway)
+
+	// Initialize MCP components
+	mcpConfig := &mcp.Config{
+		ServerName:    "financial-backend-mcp",
+		ServerVersion: "1.0.0",
+		Transport:     mcp.TransportTypeHTTP,
+	}
+
+	mcpServer := mcp.NewServer(mcpConfig)
+
+	// Initialize and register MCP tools
+	toolRegistry := tools.GetGlobalRegistry()
+	toolRegistry.SetUseCases(expenseUC, incomeUC, budgetUC, budgetMovementUC, dashboardUC)
+
+	if err := toolRegistry.Initialize(); err != nil {
+		log.Fatalf("Failed to initialize MCP tool registry: %v", err)
+	}
+
+	if err := toolRegistry.ConfigureMCPServer(mcpServer.GetMCPServer()); err != nil {
+		log.Fatalf("Failed to configure MCP server with tools: %v", err)
+	}
+
+	// Initialize MCP streaming handler
+	streamingHandler := mcp.NewStreamingHandler(mcpServer)
+
+	// Initialize MCP middleware
+	mcpMiddleware := mcp.NewMCPMiddleware()
 
 	// Inicializa os controllers
 	expenseController := controllers.NewExpenseController(expenseUC)
@@ -117,6 +147,18 @@ func main() {
 		dashboardController.RegisterRoutes(api)
 	}
 
+	// Configure MCP routes with middleware
+	mcpGroup := router.Group("/mcp")
+	mcpGroup.Use(mcpMiddleware.CORSMiddleware())
+	mcpGroup.Use(mcpMiddleware.LoggingMiddleware())
+	mcpGroup.Use(mcpMiddleware.ErrorHandlerMiddleware())
+	mcpGroup.Use(mcpMiddleware.TracingMiddleware())
+	mcpGroup.Use(mcpMiddleware.ConnectionLimitMiddleware(100)) // Limit to 100 concurrent connections
+	{
+		// Use the RegisterRoutes method from StreamingHandler
+		streamingHandler.RegisterRoutes(mcpGroup)
+	}
+
 	// Configura o servidor HTTP
 	srv := &http.Server{
 		Addr:    cfg.ServerAddress,
@@ -143,6 +185,11 @@ func main() {
 	// Shutdown telemetry
 	if err := telemetry.Shutdown(ctx); err != nil {
 		log.Printf("Error shutting down telemetry: %v", err)
+	}
+
+	// Shutdown MCP streaming handler
+	if err := streamingHandler.Shutdown(ctx); err != nil {
+		log.Printf("Error shutting down MCP streaming handler: %v", err)
 	}
 
 	// Tenta realizar o shutdown gracioso
