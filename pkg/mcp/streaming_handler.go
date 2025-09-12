@@ -16,10 +16,11 @@ import (
 
 // StreamingHandler handles MCP streaming connections using SSE
 type StreamingHandler struct {
-	server      *Server
-	connections map[string]*ConnectionContext
-	mu          sync.RWMutex
-	tracer      trace.Tracer
+	server         *Server
+	connections    map[string]*ConnectionContext
+	sessionManager *SessionManager
+	mu             sync.RWMutex
+	tracer         trace.Tracer
 }
 
 // ConnectionContext manages individual streaming connections
@@ -33,59 +34,11 @@ type ConnectionContext struct {
 // NewStreamingHandler creates a new MCP streaming handler
 func NewStreamingHandler(server *Server) *StreamingHandler {
 	return &StreamingHandler{
-		server:      server,
-		connections: make(map[string]*ConnectionContext),
-		tracer:      otel.Tracer("mcp-streaming-handler"),
+		server:         server,
+		connections:    make(map[string]*ConnectionContext),
+		sessionManager: NewSessionManager(),
+		tracer:         otel.Tracer("mcp-streaming-handler"),
 	}
-}
-
-// HandleSSE handles Server-Sent Events connections for MCP
-func (sh *StreamingHandler) HandleSSE(c *gin.Context) {
-	ctx, span := sh.tracer.Start(c.Request.Context(), "mcp.streaming.sse.handle")
-	defer span.End()
-
-	connectionID := sh.generateConnectionID()
-
-	// Create connection context with cancellation
-	connCtx, cancel := context.WithCancel(ctx)
-	connection := &ConnectionContext{
-		ID:        connectionID,
-		StartTime: time.Now(),
-		Context:   connCtx,
-		Cancel:    cancel,
-	}
-
-	// Store connection
-	sh.mu.Lock()
-	sh.connections[connectionID] = connection
-	sh.mu.Unlock()
-
-	// Clean up connection on exit
-	defer func() {
-		sh.mu.Lock()
-		delete(sh.connections, connectionID)
-		sh.mu.Unlock()
-		cancel()
-		log.Printf("MCP streaming connection %s closed", connectionID)
-	}()
-
-	log.Printf("MCP streaming connection %s established", connectionID)
-
-	// Set SSE headers
-	c.Header("Content-Type", "text/event-stream")
-	c.Header("Cache-Control", "no-cache")
-	c.Header("Connection", "keep-alive")
-	c.Header("Access-Control-Allow-Origin", "*")
-	c.Header("Access-Control-Allow-Headers", "Cache-Control")
-
-	// Create SSE handler from MCP SDK
-	sseHandler := mcp.NewSSEHandler(func(request *http.Request) *mcp.Server {
-		log.Printf("Creating MCP server for SSE connection %s", connectionID)
-		return sh.server.GetMCPServer()
-	})
-
-	// Serve the SSE connection
-	sseHandler.ServeHTTP(c.Writer, c.Request)
 }
 
 // HandleWebSocket handles WebSocket connections for MCP (future implementation)
@@ -109,11 +62,12 @@ func (sh *StreamingHandler) HandleStreamingInfo(c *gin.Context) {
 	defer sh.mu.RUnlock()
 
 	connections := make([]gin.H, 0, len(sh.connections))
-	for id, conn := range sh.connections {
+	for sessionID, conn := range sh.connections {
 		connections = append(connections, gin.H{
-			"id":         id,
-			"start_time": conn.StartTime,
-			"duration":   time.Since(conn.StartTime).String(),
+			"connection_id": conn.ID,
+			"session_id":    sessionID,
+			"start_time":    conn.StartTime,
+			"duration":      time.Since(conn.StartTime).String(),
 		})
 	}
 
@@ -138,8 +92,8 @@ func (sh *StreamingHandler) Shutdown(ctx context.Context) error {
 	defer sh.mu.Unlock()
 
 	// Cancel all active connections
-	for id, conn := range sh.connections {
-		log.Printf("Closing MCP streaming connection %s", id)
+	for sessionID, conn := range sh.connections {
+		log.Printf("Closing MCP streaming connection %s (session: %s)", conn.ID, sessionID)
 		conn.Cancel()
 	}
 
@@ -177,8 +131,22 @@ func (sh *StreamingHandler) generateConnectionID() string {
 
 // RegisterRoutes registers streaming endpoints with the Gin router
 func (sh *StreamingHandler) RegisterRoutes(router *gin.RouterGroup) {
+	// Create the MCP SSE handler once
+	sseHandler := mcp.NewSSEHandler(func(request *http.Request) *mcp.Server {
+		connectionID := sh.generateConnectionID()
+		log.Printf("Creating MCP server for connection %s", connectionID)
+		return sh.server.GetMCPServer()
+	})
+
+	// Wrap the MCP handler with session management middleware
+	sessionManagedHandler := sh.sessionManager.SessionMiddleware(sseHandler)
+
 	// SSE endpoint for streaming MCP connections
-	router.GET("/stream", sh.HandleSSE)
+	router.GET("/stream", gin.WrapH(sessionManagedHandler))
+	router.POST("/stream", gin.WrapH(sessionManagedHandler))
+
+	// The MCP SDK might create additional endpoints internally, so we need to handle them
+	router.POST("/stream/*path", gin.WrapH(sessionManagedHandler))
 
 	// WebSocket endpoint (future implementation)
 	router.GET("/ws", sh.HandleWebSocket)
