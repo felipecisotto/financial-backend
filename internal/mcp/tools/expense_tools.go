@@ -245,4 +245,3 @@ func (t *DeleteExpenseTool) Execute(ctx context.Context, args map[string]interfa
 		"message": fmt.Sprintf("Expense with ID %s deleted successfully", id),
 	}, nil
 }
-

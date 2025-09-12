@@ -2,6 +2,7 @@ package tools
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"sync"
@@ -89,12 +90,52 @@ func (r *ToolRegistry) Initialize() error {
 	return nil
 }
 
-// RegisterTool registers a single tool with metadata
-func (r *ToolRegistry) RegisterTool(tool MCPTool, metadata MCPToolMetadata) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+// ConfigureMCPServer configures the MCP server with all registered tools
+func (r *ToolRegistry) ConfigureMCPServer(server *mcp.Server) error {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 
-	return r.registerToolUnsafe(tool, metadata)
+	if !r.initialized {
+		return fmt.Errorf("registry not initialized")
+	}
+
+	for name, tool := range r.tools {
+		mcpTool := tool.GetTool()
+		server.AddTool(mcpTool, func(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			log.Printf("Tool handler called for: %s", name)
+
+			// Extract args from request
+			args := make(map[string]interface{})
+			if req.Params.Arguments != nil {
+				// Arguments is json.RawMessage, unmarshal it
+				if err := json.Unmarshal(req.Params.Arguments, &args); err != nil {
+					log.Printf("Warning: Failed to unmarshal arguments: %v", err)
+				}
+			}
+
+			result, err := tool.Execute(ctx, args)
+			if err != nil {
+				return nil, err
+			}
+
+			// Serialize result to proper JSON format
+			serializedResult := serializeToolResult(result)
+
+			// Convert result to MCP response
+			return &mcp.CallToolResult{
+				Content: []mcp.Content{
+					&mcp.TextContent{
+						Text: serializedResult,
+					},
+				},
+			}, nil
+		})
+
+		log.Printf("Configured MCP server with tool: %s", name)
+	}
+
+	log.Printf("MCP server configured with %d tools", len(r.tools))
+	return nil
 }
 
 // registerToolUnsafe registers a tool without acquiring lock (internal use)
@@ -114,147 +155,6 @@ func (r *ToolRegistry) registerToolUnsafe(tool MCPTool, metadata MCPToolMetadata
 
 	log.Printf("Registered MCP tool: %s (category: %s)", metadata.Name, metadata.Category)
 	return nil
-}
-
-// GetTool retrieves a tool by name
-func (r *ToolRegistry) GetTool(name string) (MCPTool, error) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-
-	tool, exists := r.tools[name]
-	if !exists {
-		return nil, fmt.Errorf("tool %s not found", name)
-	}
-
-	return tool, nil
-}
-
-// GetAllTools returns all registered tools
-func (r *ToolRegistry) GetAllTools() map[string]MCPTool {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-
-	result := make(map[string]MCPTool)
-	for name, tool := range r.tools {
-		result[name] = tool
-	}
-	return result
-}
-
-// GetToolsByCategory returns all tools in a specific category
-func (r *ToolRegistry) GetToolsByCategory(category ToolCategory) []MCPTool {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-
-	toolNames, exists := r.categories[category]
-	if !exists {
-		return []MCPTool{}
-	}
-
-	tools := make([]MCPTool, 0, len(toolNames))
-	for _, name := range toolNames {
-		if tool, exists := r.tools[name]; exists {
-			tools = append(tools, tool)
-		}
-	}
-
-	return tools
-}
-
-// GetToolMetadata returns metadata for a specific tool
-func (r *ToolRegistry) GetToolMetadata(name string) (MCPToolMetadata, error) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-
-	metadata, exists := r.metadata[name]
-	if !exists {
-		return MCPToolMetadata{}, fmt.Errorf("metadata for tool %s not found", name)
-	}
-
-	return metadata, nil
-}
-
-// ListAvailableTools returns a list of all available tool names and their categories
-func (r *ToolRegistry) ListAvailableTools() map[ToolCategory][]string {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-
-	result := make(map[ToolCategory][]string)
-	for category, tools := range r.categories {
-		result[category] = make([]string, len(tools))
-		copy(result[category], tools)
-	}
-
-	return result
-}
-
-// ConfigureMCPServer configures the MCP server with all registered tools
-func (r *ToolRegistry) ConfigureMCPServer(server *mcp.Server) error {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-
-	if !r.initialized {
-		return fmt.Errorf("registry not initialized")
-	}
-
-	for name, tool := range r.tools {
-		mcpTool := tool.GetTool()
-		server.AddTool(mcpTool, func(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			// Extract args from request
-			args := make(map[string]interface{})
-			// Note: Arguments handling will need proper JSON unmarshaling
-			// For now, pass empty map - this will be improved in actual tool implementations
-
-			result, err := tool.Execute(ctx, args)
-			if err != nil {
-				return nil, err
-			}
-
-			// Convert result to MCP response
-			return &mcp.CallToolResult{
-				Content: []mcp.Content{
-					&mcp.TextContent{
-						Text: fmt.Sprintf("%v", result),
-					},
-				},
-			}, nil
-		})
-
-		log.Printf("Configured MCP server with tool: %s", name)
-	}
-
-	log.Printf("MCP server configured with %d tools", len(r.tools))
-	return nil
-}
-
-// IsInitialized returns whether the registry has been initialized
-func (r *ToolRegistry) IsInitialized() bool {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	return r.initialized
-}
-
-// GetStats returns statistics about registered tools
-func (r *ToolRegistry) GetStats() map[string]interface{} {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-
-	stats := map[string]interface{}{
-		"total_tools": len(r.tools),
-		"initialized": r.initialized,
-		"categories":  make(map[string]int),
-		"tool_list":   make([]string, 0, len(r.tools)),
-	}
-
-	for category, tools := range r.categories {
-		stats["categories"].(map[string]int)[string(category)] = len(tools)
-	}
-
-	for name := range r.tools {
-		stats["tool_list"] = append(stats["tool_list"].([]string), name)
-	}
-
-	return stats
 }
 
 // registerExpenseTools registers all expense-related tools
@@ -466,15 +366,6 @@ func (r *ToolRegistry) registerDashboardTools() error {
 		metadata MCPToolMetadata
 	}{
 		{
-			tool: NewGetFinancialSummaryTool(r.dashboardUseCase),
-			metadata: MCPToolMetadata{
-				Name:        "get_financial_summary",
-				Description: "Get comprehensive financial overview",
-				Category:    CategoryDashboard,
-				Version:     "1.0.0",
-			},
-		},
-		{
 			tool: NewGetMonthlySummaryTool(r.dashboardUseCase),
 			metadata: MCPToolMetadata{
 				Name:        "get_monthly_summary",
@@ -510,6 +401,24 @@ func (r *ToolRegistry) registerDashboardTools() error {
 	}
 
 	return nil
+}
+
+// serializeToolResult handles automatic JSON serialization for all tool results
+func serializeToolResult(result interface{}) string {
+	// If result is already a string, assume it's pre-serialized JSON
+	if str, ok := result.(string); ok {
+		return str
+	}
+
+	// Otherwise, serialize to JSON
+	jsonData, err := json.Marshal(result)
+	if err != nil {
+		log.Printf("Warning: Failed to serialize tool result: %v", err)
+		// Fallback to null JSON
+		return "null"
+	}
+
+	return string(jsonData)
 }
 
 // Global registry instance
