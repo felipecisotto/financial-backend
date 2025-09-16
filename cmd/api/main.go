@@ -73,33 +73,6 @@ func main() {
 	budgetMovementUC := budgetMovementUseCase.NewBudgetMovementUseCase(budgetMovementGateway, budgetGateway, expenseGateway)
 	dashboardUC := dashboard.NewDashBoardUseCase(expenseGateway, incomeGateway, budgetMovementGateway)
 
-	// Initialize MCP components
-	mcpConfig := &mcp.Config{
-		ServerName:    "financial-backend-mcp",
-		ServerVersion: "1.0.0",
-		Transport:     mcp.TransportTypeHTTP,
-	}
-
-	mcpServer := mcp.NewServer(mcpConfig)
-
-	// Initialize and register MCP tools
-	toolRegistry := tools.GetGlobalRegistry()
-	toolRegistry.SetUseCases(expenseUC, incomeUC, budgetUC, budgetMovementUC, dashboardUC)
-
-	if err := toolRegistry.Initialize(); err != nil {
-		log.Fatalf("Failed to initialize MCP tool registry: %v", err)
-	}
-
-	if err := toolRegistry.ConfigureMCPServer(mcpServer.GetMCPServer()); err != nil {
-		log.Fatalf("Failed to configure MCP server with tools: %v", err)
-	}
-
-	// Initialize MCP streaming handler
-	streamingHandler := mcp.NewStreamingHandler(mcpServer)
-
-	// Initialize MCP middleware
-	mcpMiddleware := mcp.NewMCPMiddleware()
-
 	// Inicializa os controllers
 	expenseController := controllers.NewExpenseController(expenseUC)
 	incomeController := controllers.NewIncomeController(incomeUC)
@@ -135,7 +108,25 @@ func main() {
 			"time":   time.Now().Format(time.RFC3339),
 		})
 	})
+	mcpServer := mcp.NewServer()
 
+	// Initialize and register MCP tools
+	toolRegistry := tools.GetGlobalRegistry()
+	toolRegistry.SetUseCases(expenseUC, incomeUC, budgetUC, budgetMovementUC, dashboardUC)
+
+	if err := toolRegistry.Initialize(); err != nil {
+		log.Fatalf("Failed to initialize MCP tool registry: %v", err)
+	}
+
+	if err := toolRegistry.ConfigureMCPServer(mcpServer.GetMCPServer()); err != nil {
+		log.Fatalf("Failed to configure MCP server with tools: %v", err)
+	}
+
+	// Initialize MCP streaming handler
+	streamingHandler := mcp.NewStreamingHandler(mcpServer)
+
+	// Initialize MCP middleware
+	mcpMiddleware := mcp.NewMCPMiddleware()
 	// Configura as rotas
 	api := router.Group("/api")
 	{

@@ -18,7 +18,6 @@ import (
 type StreamingHandler struct {
 	server         *Server
 	connections    map[string]*ConnectionContext
-	sessionManager *SessionManager
 	mu             sync.RWMutex
 	tracer         trace.Tracer
 }
@@ -31,12 +30,12 @@ type ConnectionContext struct {
 	Cancel    context.CancelFunc
 }
 
+
 // NewStreamingHandler creates a new MCP streaming handler
 func NewStreamingHandler(server *Server) *StreamingHandler {
 	return &StreamingHandler{
 		server:         server,
 		connections:    make(map[string]*ConnectionContext),
-		sessionManager: NewSessionManager(),
 		tracer:         otel.Tracer("mcp-streaming-handler"),
 	}
 }
@@ -124,29 +123,22 @@ func (sh *StreamingHandler) GetActiveConnections() int {
 	return len(sh.connections)
 }
 
-// generateConnectionID creates a unique connection identifier
-func (sh *StreamingHandler) generateConnectionID() string {
-	return fmt.Sprintf("mcp-conn-%d", time.Now().UnixNano())
-}
-
 // RegisterRoutes registers streaming endpoints with the Gin router
 func (sh *StreamingHandler) RegisterRoutes(router *gin.RouterGroup) {
-	// Create the MCP SSE handler once
-	sseHandler := mcp.NewSSEHandler(func(request *http.Request) *mcp.Server {
-		connectionID := sh.generateConnectionID()
-		log.Printf("Creating MCP server for connection %s", connectionID)
+	// Try StreamableHTTPHandler instead of SSEHandler
+	// This might give us more control over endpoint configuration
+	streamableHandler := mcp.NewStreamableHTTPHandler(func(request *http.Request) *mcp.Server {
+		log.Printf("MCP Streamable: Creating server for request %s %s", request.Method, request.URL.Path)
 		return sh.server.GetMCPServer()
-	})
+	}, nil) // Using nil options for now
 
-	// Wrap the MCP handler with session management middleware
-	sessionManagedHandler := sh.sessionManager.SessionMiddleware(sseHandler)
+	// Streamable HTTP endpoint - supports both GET and POST naturally
+	router.GET("/stream", gin.WrapH(streamableHandler))
+	router.POST("/stream", gin.WrapH(streamableHandler))
 
-	// SSE endpoint for streaming MCP connections
-	router.GET("/stream", gin.WrapH(sessionManagedHandler))
-	router.POST("/stream", gin.WrapH(sessionManagedHandler))
-
-	// The MCP SDK might create additional endpoints internally, so we need to handle them
-	router.POST("/stream/*path", gin.WrapH(sessionManagedHandler))
+	// Handle sub-paths if needed
+	router.POST("/stream/*path", gin.WrapH(streamableHandler))
+	router.GET("/stream/*path", gin.WrapH(streamableHandler))
 
 	// WebSocket endpoint (future implementation)
 	router.GET("/ws", sh.HandleWebSocket)
