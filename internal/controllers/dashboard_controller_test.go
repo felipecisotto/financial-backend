@@ -152,6 +152,72 @@ func (s *DashboardControllerTestSuite) TestSummaryBudgetUsageByMonthYear_UseCase
 	assert.Equal(s.T(), http.StatusBadRequest, w.Code)
 }
 
+func (s *DashboardControllerTestSuite) TestGetMonthlyEvolution_Success() {
+	expectedEvolution := response.MonthlyEvolutionView{
+		{Month: 1, Income: 5000.0, Expense: 3000.0},
+		{Month: 2, Income: 5200.0, Expense: 3200.0},
+		{Month: 3, Income: 5000.0, Expense: 2800.0},
+		{Month: 4, Income: 5100.0, Expense: 3100.0},
+		{Month: 5, Income: 5300.0, Expense: 3300.0},
+		{Month: 6, Income: 5200.0, Expense: 3000.0},
+		{Month: 7, Income: 5400.0, Expense: 3400.0},
+		{Month: 8, Income: 5500.0, Expense: 3500.0},
+		{Month: 9, Income: 5300.0, Expense: 3200.0},
+		{Month: 10, Income: 5600.0, Expense: 3600.0},
+		{Month: 11, Income: 5700.0, Expense: 3700.0},
+		{Month: 12, Income: 5800.0, Expense: 3800.0},
+	}
+
+	s.mockUseCase.On("GetMonthlyEvolution", mock.Anything, 2024).Return(expectedEvolution, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/dashboard/monthly-evolution?year=2024", nil)
+	w := httptest.NewRecorder()
+
+	s.router.ServeHTTP(w, req)
+
+	assert.Equal(s.T(), http.StatusOK, w.Code)
+
+	var response response.MonthlyEvolutionView
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(s.T(), err)
+	assert.Len(s.T(), response, 12)
+	assert.Equal(s.T(), 1, response[0].Month)
+	assert.Equal(s.T(), 5000.0, response[0].Income)
+	assert.Equal(s.T(), 3000.0, response[0].Expense)
+	assert.Equal(s.T(), 12, response[11].Month)
+	assert.Equal(s.T(), 5800.0, response[11].Income)
+	assert.Equal(s.T(), 3800.0, response[11].Expense)
+}
+
+func (s *DashboardControllerTestSuite) TestGetMonthlyEvolution_MissingRequiredParams() {
+	req := httptest.NewRequest(http.MethodGet, "/api/dashboard/monthly-evolution", nil) // missing year
+	w := httptest.NewRecorder()
+
+	s.router.ServeHTTP(w, req)
+
+	assert.Equal(s.T(), http.StatusBadRequest, w.Code)
+}
+
+func (s *DashboardControllerTestSuite) TestGetMonthlyEvolution_InvalidParams() {
+	req := httptest.NewRequest(http.MethodGet, "/api/dashboard/monthly-evolution?year=invalid", nil)
+	w := httptest.NewRecorder()
+
+	s.router.ServeHTTP(w, req)
+
+	assert.Equal(s.T(), http.StatusBadRequest, w.Code)
+}
+
+func (s *DashboardControllerTestSuite) TestGetMonthlyEvolution_UseCaseError() {
+	s.mockUseCase.On("GetMonthlyEvolution", mock.Anything, 2024).Return(response.MonthlyEvolutionView(nil), fmt.Errorf("evolution error"))
+
+	req := httptest.NewRequest(http.MethodGet, "/api/dashboard/monthly-evolution?year=2024", nil)
+	w := httptest.NewRecorder()
+
+	s.router.ServeHTTP(w, req)
+
+	assert.Equal(s.T(), http.StatusBadRequest, w.Code)
+}
+
 func TestDashboardControllerTestSuite(t *testing.T) {
 	suite.Run(t, new(DashboardControllerTestSuite))
 }
