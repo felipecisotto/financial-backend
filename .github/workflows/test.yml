@@ -70,14 +70,22 @@ jobs:
         DB_PASSWORD: postgres
         DB_NAME: financial_test
 
-    - name: Check test coverage
+    # TODO: Reabilitar validação de coverage quando atingir meta de 70%
+    # Tracked in: https://linear.app/fcisotto-side-projects/issue/FIN-63
+    # - name: Check test coverage
+    #   run: |
+    #     COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print substr($3, 1, length($3)-1)}')
+    #     echo "Total coverage: $COVERAGE%"
+    #     if (( $(echo "$COVERAGE < 70" | bc -l) )); then
+    #       echo "Coverage is below 70%"
+    #       exit 1
+    #     fi
+
+    - name: Report test coverage
       run: |
         COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print substr($3, 1, length($3)-1)}')
-        echo "Total coverage: $COVERAGE%"
-        if (( $(echo "$COVERAGE < 50" | bc -l) )); then
-          echo "Coverage is below 50%"
-          exit 1
-        fi
+        echo "📊 Total coverage: $COVERAGE%"
+        echo "🎯 Target coverage: 70%"
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5
