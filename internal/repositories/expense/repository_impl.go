@@ -124,3 +124,47 @@ func (r *repository) SummaryByMonth(ctx context.Context, month int, year int) (f
 	}
 	return amount, nil
 }
+
+func (r *repository) MonthlyEvolution(ctx context.Context, year int) (map[string]float64, error) {
+	result := make(map[string]float64)
+
+	// Initialize all months with 0
+	for month := 1; month <= 12; month++ {
+		result[fmt.Sprintf("%d", month)] = 0
+	}
+
+	// Query to get all expenses with their amounts for the year
+	var expenses []entities.Expense
+	if err := r.db.WithContext(ctx).Where("EXTRACT(YEAR FROM start_date) <= ? AND (end_date IS NULL OR EXTRACT(YEAR FROM end_date) >= ?)", year, year).Find(&expenses).Error; err != nil {
+		return result, err
+	}
+
+	// Process each expense and add to corresponding months
+	for _, expense := range expenses {
+		startMonth := int(expense.StartDate.Month())
+		startYear := expense.StartDate.Year()
+
+		var endMonth int
+		var endYear int
+
+		if expense.EndDate != nil {
+			endMonth = int(expense.EndDate.Month())
+			endYear = expense.EndDate.Year()
+		} else {
+			// If no end date, consider it active until December of the target year
+			endMonth = 12
+			endYear = year
+		}
+
+		// Add amount to each month the expense is active
+		for month := 1; month <= 12; month++ {
+			// Check if this month/year is within the expense period
+			if (year > startYear || (year == startYear && month >= startMonth)) &&
+				(year < endYear || (year == endYear && month <= endMonth)) {
+				result[fmt.Sprintf("%d", month)] += expense.Amount
+			}
+		}
+	}
+
+	return result, nil
+}

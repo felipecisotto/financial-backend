@@ -72,3 +72,47 @@ func (r *repository) SummaryByMonth(ctx context.Context, month, year int) (amoun
 	}
 	return
 }
+
+func (r *repository) MonthlyEvolution(ctx context.Context, year int) (map[string]float64, error) {
+	result := make(map[string]float64)
+
+	// Initialize all months with 0
+	for month := 1; month <= 12; month++ {
+		result[fmt.Sprintf("%d", month)] = 0
+	}
+
+	// Query to get all incomes with their amounts for the year
+	var incomes []entities.Income
+	if err := r.db.WithContext(ctx).Where("EXTRACT(YEAR FROM start_date) <= ? AND (end_date IS NULL OR EXTRACT(YEAR FROM end_date) >= ?)", year, year).Find(&incomes).Error; err != nil {
+		return result, err
+	}
+
+	// Process each income and add to corresponding months
+	for _, income := range incomes {
+		startMonth := int(income.StartDate.Month())
+		startYear := income.StartDate.Year()
+
+		var endMonth int
+		var endYear int
+
+		if income.EndDate != nil {
+			endMonth = int(income.EndDate.Month())
+			endYear = income.EndDate.Year()
+		} else {
+			// If no end date, consider it active until December of the target year
+			endMonth = 12
+			endYear = year
+		}
+
+		// Add amount to each month the income is active
+		for month := 1; month <= 12; month++ {
+			// Check if this month/year is within the income period
+			if (year > startYear || (year == startYear && month >= startMonth)) &&
+				(year < endYear || (year == endYear && month <= endMonth)) {
+				result[fmt.Sprintf("%d", month)] += income.Amount
+			}
+		}
+	}
+
+	return result, nil
+}

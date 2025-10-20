@@ -15,4 +15,7 @@ type Repository interface {
 	List(ctx context.Context, description, expenseType, category, budgetId, recurrecy, method string, page models.PageRequest) ([]*entities.Expense, int64, error)
 	GetExpensesWithoutMovimentInMonth(ctx context.Context) ([]*entities.Expense, error)
 	SummaryByMonth(ctx context.Context, month int, year int) (float64, error)
+
+	// MonthlyEvolution returns expense amounts for all 12 months of a year
+	MonthlyEvolution(ctx context.Context, year int) (map[string]float64, error)
 }

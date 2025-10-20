@@ -18,6 +18,7 @@ type ExpenseGateway interface {
 	List(ctx context.Context, description, expenseType, category, budgetId, recurrecy, method string, page models.PageRequest) ([]models.Expense, int64, error)
 	GetExpensesWithoutMovementInMonth(ctx context.Context) ([]models.Expense, error)
 	SummaryByMonth(ctx context.Context, month, year int) (amount float64, err error)
+	MonthlyEvolution(ctx context.Context, year int) (map[string]float64, error)
 }
 
 type expenseGateway struct {
@@ -103,4 +104,8 @@ func (g *expenseGateway) SummaryByMonth(ctx context.Context, month, year int) (a
 		return 0, err
 	}
 	return amount, nil
+}
+
+func (g *expenseGateway) MonthlyEvolution(ctx context.Context, year int) (map[string]float64, error) {
+	return g.repo.MonthlyEvolution(ctx, year)
 }

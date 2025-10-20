@@ -15,6 +15,7 @@ type IncomeGateway interface {
 	Get(ctx context.Context, id string) (models.Income, error)
 	List(ctx context.Context, incomeType, description string, page models.PageRequest) ([]models.Income, int64, error)
 	SummaryByMonth(ctx context.Context, month, year int) (amount float64, err error)
+	MonthlyEvolution(ctx context.Context, year int) (map[string]float64, error)
 }
 type incomeGateway struct {
 	repo income.Repository
@@ -94,4 +95,8 @@ func (g *incomeGateway) toModel(entity *entities.Income) models.Income {
 
 func (g *incomeGateway) SummaryByMonth(ctx context.Context, month, year int) (amount float64, err error) {
 	return g.repo.SummaryByMonth(ctx, month, year)
+}
+
+func (g *incomeGateway) MonthlyEvolution(ctx context.Context, year int) (map[string]float64, error) {
+	return g.repo.MonthlyEvolution(ctx, year)
 }

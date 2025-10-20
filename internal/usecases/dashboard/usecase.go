@@ -4,12 +4,14 @@ import (
 	"context"
 	"financial-backend/internal/dto/response"
 	"financial-backend/internal/gateways"
+	"fmt"
 	"sync"
 )
 
 type UseCase interface {
 	GetSummary(ctx context.Context, month, year int) (response.SummaryView, error)
 	SummaryBudgetUsageByMonthYear(ctx context.Context, month, year int) (data []response.SummaryBudgetUtilization, err error)
+	GetMonthlyEvolution(ctx context.Context, year int) (response.MonthlyEvolutionView, error)
 }
 
 type useCase struct {
@@ -58,6 +60,54 @@ func (u useCase) GetSummary(ctx context.Context, month, year int) (response.Summ
 func (u *useCase) SummaryBudgetUsageByMonthYear(ctx context.Context, month, year int) (data []response.SummaryBudgetUtilization, err error) {
 	data, err = u.budgetMovementGateway.SummaryBudgetUsageByMonthYear(ctx, month, year)
 	return
+}
+
+func (u *useCase) GetMonthlyEvolution(ctx context.Context, year int) (response.MonthlyEvolutionView, error) {
+	var wg sync.WaitGroup
+	var incomes, expenses map[string]float64
+	var incomeErr, expenseErr error
+
+	// Fetch incomes in parallel
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		incomes, incomeErr = u.incomeGateway.MonthlyEvolution(ctx, year)
+	}()
+
+	// Fetch expenses in parallel
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		expenses, expenseErr = u.expenseGateway.MonthlyEvolution(ctx, year)
+	}()
+
+	// Wait for both operations to complete
+	wg.Wait()
+
+	// Check for errors
+	if incomeErr != nil {
+		return nil, incomeErr
+	}
+	if expenseErr != nil {
+		return nil, expenseErr
+	}
+
+	// Build the result with all 12 months
+	result := make(response.MonthlyEvolutionView, 0, 12)
+
+	for month := 1; month <= 12; month++ {
+		monthKey := fmt.Sprintf("%d", month)
+
+		monthData := response.MonthlyData{
+			Month:   month,
+			Income:  incomes[monthKey],
+			Expense: expenses[monthKey],
+		}
+
+		result = append(result, monthData)
+	}
+
+	return result, nil
 }
 func NewDashBoardUseCase(
 	expenseGateway gateways.ExpenseGateway,

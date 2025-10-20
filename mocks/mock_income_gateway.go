@@ -53,3 +53,9 @@ func (m *MockIncomeGateway) SummaryByMonth(ctx context.Context, month, year int)
 	args := m.Called(ctx, month, year)
 	return args.Get(0).(float64), args.Error(1)
 }
+
+// MonthlyEvolution mocks the MonthlyEvolution method
+func (m *MockIncomeGateway) MonthlyEvolution(ctx context.Context, year int) (map[string]float64, error) {
+	args := m.Called(ctx, year)
+	return args.Get(0).(map[string]float64), args.Error(1)
+}

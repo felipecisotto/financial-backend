@@ -23,4 +23,7 @@ type Repository interface {
 	List(ctx context.Context, incomeType, description string, limit, offset int) ([]*entities.Income, int64, error)
 
 	SummaryByMonth(ctx context.Context, month, year int) (amount float64, err error)
+
+	// MonthlyEvolution returns income amounts for all 12 months of a year
+	MonthlyEvolution(ctx context.Context, year int) (map[string]float64, error)
 }
