@@ -13,3 +13,13 @@ type SummaryBudgetUtilization struct {
 	Amount      float64 `json:"amount"`
 	Usage       float64 `json:"usage"`
 }
+
+// MonthlyData representa os dados financeiros de um mês
+type MonthlyData struct {
+	Month   int     `json:"month"`
+	Income  float64 `json:"income"`
+	Expense float64 `json:"expense"`
+}
+
+// MonthlyEvolutionView representa a evolução mensal de receitas e despesas
+type MonthlyEvolutionView []MonthlyData

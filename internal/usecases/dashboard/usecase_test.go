@@ -196,6 +196,131 @@ func (s *DashboardUseCaseTestSuite) TestSummaryBudgetUsageByMonthYear_GatewayErr
 	assert.Nil(s.T(), result)
 }
 
+func (s *DashboardUseCaseTestSuite) TestGetMonthlyEvolution_Success() {
+	ctx := context.Background()
+	year := 2024
+
+	incomes := map[string]float64{
+		"1": 5000.0, "2": 5200.0, "3": 5100.0, "4": 5300.0,
+		"5": 5400.0, "6": 5500.0, "7": 5600.0, "8": 5700.0,
+		"9": 5800.0, "10": 5900.0, "11": 6000.0, "12": 6100.0,
+	}
+
+	expenses := map[string]float64{
+		"1": 3000.0, "2": 3100.0, "3": 2900.0, "4": 3200.0,
+		"5": 3300.0, "6": 3400.0, "7": 3500.0, "8": 3600.0,
+		"9": 3700.0, "10": 3800.0, "11": 3900.0, "12": 4000.0,
+	}
+
+	s.mockIncomeGateway.On("MonthlyEvolution", ctx, year).Return(incomes, nil)
+	s.mockExpenseGateway.On("MonthlyEvolution", ctx, year).Return(expenses, nil)
+
+	result, err := s.useCase.GetMonthlyEvolution(ctx, year)
+
+	assert.NoError(s.T(), err)
+	assert.Len(s.T(), result, 12)
+
+	// Verify first month
+	assert.Equal(s.T(), 1, result[0].Month)
+	assert.Equal(s.T(), 5000.0, result[0].Income)
+	assert.Equal(s.T(), 3000.0, result[0].Expense)
+
+	// Verify last month
+	assert.Equal(s.T(), 12, result[11].Month)
+	assert.Equal(s.T(), 6100.0, result[11].Income)
+	assert.Equal(s.T(), 4000.0, result[11].Expense)
+
+	// Verify middle month
+	assert.Equal(s.T(), 6, result[5].Month)
+	assert.Equal(s.T(), 5500.0, result[5].Income)
+	assert.Equal(s.T(), 3400.0, result[5].Expense)
+}
+
+func (s *DashboardUseCaseTestSuite) TestGetMonthlyEvolution_WithZeroValues() {
+	ctx := context.Background()
+	year := 2024
+
+	incomes := map[string]float64{
+		"1": 0.0, "2": 0.0, "3": 0.0, "4": 0.0,
+		"5": 0.0, "6": 0.0, "7": 0.0, "8": 0.0,
+		"9": 0.0, "10": 0.0, "11": 0.0, "12": 0.0,
+	}
+
+	expenses := map[string]float64{
+		"1": 0.0, "2": 0.0, "3": 0.0, "4": 0.0,
+		"5": 0.0, "6": 0.0, "7": 0.0, "8": 0.0,
+		"9": 0.0, "10": 0.0, "11": 0.0, "12": 0.0,
+	}
+
+	s.mockIncomeGateway.On("MonthlyEvolution", ctx, year).Return(incomes, nil)
+	s.mockExpenseGateway.On("MonthlyEvolution", ctx, year).Return(expenses, nil)
+
+	result, err := s.useCase.GetMonthlyEvolution(ctx, year)
+
+	assert.NoError(s.T(), err)
+	assert.Len(s.T(), result, 12)
+
+	for i := 0; i < 12; i++ {
+		assert.Equal(s.T(), i+1, result[i].Month)
+		assert.Equal(s.T(), 0.0, result[i].Income)
+		assert.Equal(s.T(), 0.0, result[i].Expense)
+	}
+}
+
+func (s *DashboardUseCaseTestSuite) TestGetMonthlyEvolution_IncomeGatewayError() {
+	ctx := context.Background()
+	year := 2024
+
+	expenses := map[string]float64{
+		"1": 3000.0, "2": 3100.0, "3": 2900.0, "4": 3200.0,
+		"5": 3300.0, "6": 3400.0, "7": 3500.0, "8": 3600.0,
+		"9": 3700.0, "10": 3800.0, "11": 3900.0, "12": 4000.0,
+	}
+
+	s.mockIncomeGateway.On("MonthlyEvolution", ctx, year).Return(map[string]float64(nil), fmt.Errorf("income evolution error"))
+	s.mockExpenseGateway.On("MonthlyEvolution", ctx, year).Return(expenses, nil)
+
+	result, err := s.useCase.GetMonthlyEvolution(ctx, year)
+
+	assert.Error(s.T(), err)
+	assert.Contains(s.T(), err.Error(), "income evolution error")
+	assert.Nil(s.T(), result)
+}
+
+func (s *DashboardUseCaseTestSuite) TestGetMonthlyEvolution_ExpenseGatewayError() {
+	ctx := context.Background()
+	year := 2024
+
+	incomes := map[string]float64{
+		"1": 5000.0, "2": 5200.0, "3": 5100.0, "4": 5300.0,
+		"5": 5400.0, "6": 5500.0, "7": 5600.0, "8": 5700.0,
+		"9": 5800.0, "10": 5900.0, "11": 6000.0, "12": 6100.0,
+	}
+
+	s.mockIncomeGateway.On("MonthlyEvolution", ctx, year).Return(incomes, nil)
+	s.mockExpenseGateway.On("MonthlyEvolution", ctx, year).Return(map[string]float64(nil), fmt.Errorf("expense evolution error"))
+
+	result, err := s.useCase.GetMonthlyEvolution(ctx, year)
+
+	assert.Error(s.T(), err)
+	assert.Contains(s.T(), err.Error(), "expense evolution error")
+	assert.Nil(s.T(), result)
+}
+
+func (s *DashboardUseCaseTestSuite) TestGetMonthlyEvolution_BothGatewaysError() {
+	ctx := context.Background()
+	year := 2024
+
+	s.mockIncomeGateway.On("MonthlyEvolution", ctx, year).Return(map[string]float64(nil), fmt.Errorf("income evolution error"))
+	s.mockExpenseGateway.On("MonthlyEvolution", ctx, year).Return(map[string]float64(nil), fmt.Errorf("expense evolution error"))
+
+	result, err := s.useCase.GetMonthlyEvolution(ctx, year)
+
+	assert.Error(s.T(), err)
+	assert.Contains(s.T(), err.Error(), "income evolution error")
+	assert.Nil(s.T(), result)
+}
+
 func TestDashboardUseCaseTestSuite(t *testing.T) {
 	suite.Run(t, new(DashboardUseCaseTestSuite))
 }

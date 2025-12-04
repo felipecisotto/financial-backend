@@ -26,3 +26,9 @@ func (m *MockDashboardUseCase) SummaryBudgetUsageByMonthYear(ctx context.Context
 	}
 	return args.Get(0).([]response.SummaryBudgetUtilization), args.Error(1)
 }
+
+// GetMonthlyEvolution mocks the GetMonthlyEvolution method
+func (m *MockDashboardUseCase) GetMonthlyEvolution(ctx context.Context, year int) (response.MonthlyEvolutionView, error) {
+	args := m.Called(ctx, year)
+	return args.Get(0).(response.MonthlyEvolutionView), args.Error(1)
+}

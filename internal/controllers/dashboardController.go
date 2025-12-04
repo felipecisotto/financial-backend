@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"financial-backend/internal/dto"
+	"financial-backend/internal/dto/request"
 	"financial-backend/internal/usecases/dashboard"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -18,7 +18,7 @@ func NewDashboardController(uc dashboard.UseCase) *DashboardController {
 }
 
 func (d *DashboardController) GetSummary(ctx *gin.Context) {
-	var input dto.SummaryQueryParams
+	var input request.SummaryQueryParams
 
 	if err := ctx.ShouldBindQuery(&input); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -35,7 +35,7 @@ func (d *DashboardController) GetSummary(ctx *gin.Context) {
 }
 
 func (d *DashboardController) SummaryBudgetUsageByMonthYear(ctx *gin.Context) {
-	var input dto.SummaryQueryParams
+	var input request.SummaryQueryParams
 
 	if err := ctx.ShouldBindQuery(&input); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -51,10 +51,28 @@ func (d *DashboardController) SummaryBudgetUsageByMonthYear(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, summary)
 }
 
+func (d *DashboardController) GetMonthlyEvolution(ctx *gin.Context) {
+	var input request.MonthlyEvolutionQueryParams
+
+	if err := ctx.ShouldBindQuery(&input); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	evolution, err := d.uc.GetMonthlyEvolution(ctx, input.Year)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, evolution)
+}
+
 func (d *DashboardController) RegisterRoutes(api *gin.RouterGroup) {
 	api = api.Group("/dashboard")
 	{
 		api.GET("/summary", d.GetSummary)
 		api.GET("/budget/utilization", d.SummaryBudgetUsageByMonthYear)
+		api.GET("/monthly-evolution", d.GetMonthlyEvolution)
 	}
 }

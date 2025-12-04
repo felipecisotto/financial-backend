@@ -16,10 +16,10 @@ import (
 
 // StreamingHandler handles MCP streaming connections using SSE
 type StreamingHandler struct {
-	server         *Server
-	connections    map[string]*ConnectionContext
-	mu             sync.RWMutex
-	tracer         trace.Tracer
+	server      *Server
+	connections map[string]*ConnectionContext
+	mu          sync.RWMutex
+	tracer      trace.Tracer
 }
 
 // ConnectionContext manages individual streaming connections
@@ -30,13 +30,12 @@ type ConnectionContext struct {
 	Cancel    context.CancelFunc
 }
 
-
 // NewStreamingHandler creates a new MCP streaming handler
 func NewStreamingHandler(server *Server) *StreamingHandler {
 	return &StreamingHandler{
-		server:         server,
-		connections:    make(map[string]*ConnectionContext),
-		tracer:         otel.Tracer("mcp-streaming-handler"),
+		server:      server,
+		connections: make(map[string]*ConnectionContext),
+		tracer:      otel.Tracer("mcp-streaming-handler"),
 	}
 }
 
