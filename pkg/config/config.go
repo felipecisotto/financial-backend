@@ -92,7 +92,7 @@ func SetupDatabase(cfg *Config) (*gorm.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("erro ao conectar ao banco de dados: %v", err)
 	}
-	db.AutoMigrate(&entities.Budget{}, &entities.Expense{}, &entities.Income{}, &entities.BudgetMovement{})
+	db.AutoMigrate(&entities.Budget{}, &entities.Expense{}, &entities.Income{}, &entities.BudgetMovement{}, &entities.SalaryEntry{})
 	return db, nil
 }
 

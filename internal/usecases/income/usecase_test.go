@@ -111,9 +111,11 @@ func (s *IncomeUseCaseTestSuite) TestUpdate_Success() {
 		incomeID,
 		"Original Income",
 		5000.0,
-		"FIXED",
+		models.IncomeTypeFixed,
 		1,
 		time.Now(),
+		nil,
+		nil,
 		nil,
 	)
 
@@ -177,9 +179,11 @@ func (s *IncomeUseCaseTestSuite) TestGet_Success() {
 		incomeID,
 		"Test Income",
 		1000.0,
-		"FIXED",
+		models.IncomeTypeFixed,
 		1,
 		time.Now(),
+		nil,
+		nil,
 		nil,
 	)
 
@@ -216,8 +220,8 @@ func (s *IncomeUseCaseTestSuite) TestList_Success() {
 
 	// Create mock incomes
 	mockIncomes := []models.Income{}
-	income1, _ := models.NewIncome("income-1", "Income 1", 1000.0, "FIXED", 1, time.Now(), nil)
-	income2, _ := models.NewIncome("income-2", "Income 2", 1500.0, "FIXED", 5, time.Now(), nil)
+	income1, _ := models.NewIncome("income-1", "Income 1", 1000.0, models.IncomeTypeFixed, 1, time.Now(), nil, nil, nil)
+	income2, _ := models.NewIncome("income-2", "Income 2", 1500.0, models.IncomeTypeFixed, 5, time.Now(), nil, nil, nil)
 	mockIncomes = append(mockIncomes, income1, income2)
 
 	s.mockGateway.On("List", ctx, "FIXED", "Salary", mock.MatchedBy(func(page models.PageRequest) bool {

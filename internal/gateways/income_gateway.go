@@ -27,30 +27,34 @@ func NewIncomeGateway(repo income.Repository) IncomeGateway {
 
 func (g *incomeGateway) Create(ctx context.Context, income models.Income) error {
 	entity := &entities.Income{
-		ID:          income.ID(),
-		Description: income.Description(),
-		Amount:      income.Amount(),
-		Type:        string(income.Type()),
-		DueDay:      income.DueDay(),
-		StartDate:   income.StartDate(),
-		EndDate:     income.EndDate(),
-		CreatedAt:   income.CreatedAt(),
-		UpdatedAt:   income.UpdatedAt(),
+		ID:           income.ID(),
+		Description:  income.Description(),
+		Amount:       income.Amount(),
+		Type:         string(income.Type()),
+		DueDay:       income.DueDay(),
+		StartDate:    income.StartDate(),
+		EndDate:      income.EndDate(),
+		DiscountMode: income.DiscountMode(),
+		HourlyRate:   income.HourlyRate(),
+		CreatedAt:    income.CreatedAt(),
+		UpdatedAt:    income.UpdatedAt(),
 	}
 	return g.repo.Create(ctx, entity)
 }
 
 func (g *incomeGateway) Update(ctx context.Context, income models.Income) error {
 	entity := &entities.Income{
-		ID:          income.ID(),
-		Description: income.Description(),
-		Amount:      income.Amount(),
-		Type:        string(income.Type()),
-		DueDay:      income.DueDay(),
-		StartDate:   income.StartDate(),
-		EndDate:     income.EndDate(),
-		CreatedAt:   income.CreatedAt(),
-		UpdatedAt:   income.UpdatedAt(),
+		ID:           income.ID(),
+		Description:  income.Description(),
+		Amount:       income.Amount(),
+		Type:         string(income.Type()),
+		DueDay:       income.DueDay(),
+		StartDate:    income.StartDate(),
+		EndDate:      income.EndDate(),
+		DiscountMode: income.DiscountMode(),
+		HourlyRate:   income.HourlyRate(),
+		CreatedAt:    income.CreatedAt(),
+		UpdatedAt:    income.UpdatedAt(),
 	}
 	return g.repo.Update(ctx, entity)
 }
@@ -89,6 +93,8 @@ func (g *incomeGateway) toModel(entity *entities.Income) models.Income {
 		entity.DueDay,
 		entity.StartDate,
 		entity.EndDate,
+		entity.DiscountMode,
+		entity.HourlyRate,
 	)
 	return income
 }

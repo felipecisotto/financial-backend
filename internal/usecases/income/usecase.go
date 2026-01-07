@@ -37,6 +37,8 @@ func (uc *useCase) Create(ctx context.Context, dto *dto.CreateIncomeRequest) (*d
 		dto.DueDay,
 		dto.StartDate,
 		dto.EndDate,
+		dto.DiscountMode,
+		dto.HourlyRate,
 	)
 
 	if err != nil {
@@ -115,14 +117,17 @@ func (uc *useCase) toResponse(income models.Income) *dto.IncomeResponse {
 	}
 
 	return &dto.IncomeResponse{
-		ID:          income.ID(),
-		Description: income.Description(),
-		Amount:      income.Amount(),
-		Type:        string(income.Type()),
-		DueDay:      income.DueDay(),
-		StartDate:   income.StartDate(),
-		EndDate:     income.EndDate(),
-		CreatedAt:   income.CreatedAt(),
-		UpdatedAt:   income.UpdatedAt(),
+		ID:                income.ID(),
+		Description:       income.Description(),
+		Amount:            income.Amount(),
+		Type:              string(income.Type()),
+		DueDay:            income.DueDay(),
+		StartDate:         income.StartDate(),
+		EndDate:           income.EndDate(),
+		DiscountMode:      income.DiscountMode(),
+		HourlyRate:        income.HourlyRate(),
+		HasSalaryTracking: income.HasSalaryTracking(),
+		CreatedAt:         income.CreatedAt(),
+		UpdatedAt:         income.UpdatedAt(),
 	}
 }

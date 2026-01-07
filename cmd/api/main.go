@@ -18,11 +18,14 @@ import (
 	budgetMovementRepo "financial-backend/internal/repositories/budget_movement"
 	expenseRepo "financial-backend/internal/repositories/expense"
 	incomeRepo "financial-backend/internal/repositories/income"
+	salaryEntryRepo "financial-backend/internal/repositories/salary_entry"
 	budgetUseCase "financial-backend/internal/usecases/budget"
 	budgetMovementUseCase "financial-backend/internal/usecases/budget_movement"
 	expenseUseCase "financial-backend/internal/usecases/expense"
 	incomeUseCase "financial-backend/internal/usecases/income"
+	salaryUseCase "financial-backend/internal/usecases/salary"
 	"financial-backend/pkg/config"
+	"financial-backend/pkg/salary"
 	"financial-backend/pkg/telemetry"
 
 	"financial-backend/internal/mcp/tools"
@@ -59,18 +62,24 @@ func main() {
 	incomeRepository := incomeRepo.NewRepository(db)
 	budgetRepository := budgetRepo.NewRepository(db)
 	budgetMovementRepository := budgetMovementRepo.NewRepository(db)
+	salaryEntryRepository := salaryEntryRepo.NewRepository(db)
 
 	// Inicializa os gateways
 	expenseGateway := gateways.NewExpenseGateway(expenseRepository)
 	incomeGateway := gateways.NewIncomeGateway(incomeRepository)
 	budgetGateway := gateways.NewBudgetGateway(budgetRepository)
 	budgetMovementGateway := gateways.NewBudgetMovementGateway(budgetMovementRepository)
+	salaryEntryGateway := gateways.NewSalaryEntryGateway(salaryEntryRepository)
+
+	// Inicializa o calculador de salário
+	salaryCalculator := salary.NewCalculator()
 
 	// Inicializa os casos de uso
 	expenseUC := expenseUseCase.NewUseCase(expenseGateway, budgetGateway, eventPublisher, cfg.DefaultDueDate)
 	incomeUC := incomeUseCase.NewUseCase(incomeGateway)
 	budgetUC := budgetUseCase.NewUseCase(budgetGateway)
 	budgetMovementUC := budgetMovementUseCase.NewBudgetMovementUseCase(budgetMovementGateway, budgetGateway, expenseGateway)
+	salaryUC := salaryUseCase.NewSalaryUseCase(incomeGateway, salaryEntryGateway, salaryCalculator)
 	dashboardUC := dashboard.NewDashBoardUseCase(expenseGateway, incomeGateway, budgetMovementGateway)
 
 	// Inicializa os controllers
@@ -78,6 +87,7 @@ func main() {
 	incomeController := controllers.NewIncomeController(incomeUC)
 	budgetController := controllers.NewBudgetController(budgetUC)
 	budgetMovementController := controllers.NewBudgetMovementController(budgetMovementUC)
+	salaryController := controllers.NewSalaryController(salaryUC)
 	dashboardController := controllers.NewDashboardController(dashboardUC)
 
 	//register handlers
@@ -135,6 +145,7 @@ func main() {
 		incomeController.RegisterRoutes(api)
 		budgetController.RegisterRoutes(api)
 		budgetMovementController.RegisterRoutes(api)
+		salaryController.RegisterRoutes(api)
 		dashboardController.RegisterRoutes(api)
 	}
 
